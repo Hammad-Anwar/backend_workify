@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 RUN npm install
+RUN npm i nodemon -g
 RUN npx prisma
 RUN npx prisma generate
 COPY . .
