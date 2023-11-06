@@ -36,8 +36,12 @@ services:
         condition: service_healthy
     volumes:
       - type: bind
-        source: ./services/production
-        target: /app
+        source: 
+          - ./services/production
+          - ./services/production/node_modules
+        target: 
+          - /app
+          - /app/node_modules
         consistency: cached
   # pg-admin:
   #   image: dpage/pgadmin4:6
