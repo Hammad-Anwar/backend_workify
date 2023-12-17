@@ -8,22 +8,213 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:pass@host.docker.internal:5434/inven?schema=public"
+  url      = "postgresql://postgres:pass@host.docker.internal:5434/workifyDb?schema=public"
 }
 
-model customers {
-  customer_id      Int       @id @unique(map: "customer_id_UNIQUE") @default(autoincrement())
-  customer_name    String    @db.VarChar(75)
-  customer_email   String?   @db.VarChar(120)
-  customer_phone   String    @db.VarChar(120)
-  customer_address String    @db.VarChar(150)
-  createdAt        DateTime? @default(now())
+
+model attachment {
+  attachment_id   Int      @id @default(autoincrement())
+  message_id      Int?
+  attachment_link String?  @db.VarChar
+  message         message? @relation(fields: [message_id], references: [message_id], onDelete: Cascade)
 }
 
-model products {
-  product_id    Int    @id @unique(map: "product_id_UNIQUE") @default(autoincrement())
-  product_name  String @db.VarChar(120)
-  product_price Float
-  category_name  String @db.VarChar(120)
-  brand_name     String @db.VarChar(120)
+model client {
+  client_id      Int           @id @default(autoincrement())
+  useraccount_id Int?
+  reg_date       DateTime?     @db.Date
+  location       String?       @db.VarChar
+  overview       String?       @db.VarChar
+  user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+  contract       contract[]
+  job            job[]
+  message        message[]
+  proposal       proposal[]
+  review         review[]
+}
+
+model contract {
+  contract_id   Int         @id @default(autoincrement())
+  freelancer_id Int?
+  client_id     Int?
+  proposal_id   Int?
+  start_time    DateTime?   @db.Time(6)
+  end_time      DateTime?   @db.Time(6)
+  payment_id    Int?
+  client        client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer    freelancer? @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  payment       payment?    @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
+  proposal      proposal?   @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+}
+
+model duration {
+  duration_id Int     @id @default(autoincrement())
+  text_column String? @db.VarChar
+  job         job[]
+  task        task[]
+}
+
+model feature_job {
+  feature_id Int     @id @default(autoincrement())
+  status     String? @db.VarChar
+  job        job[]
+}
+
+model freelancer {
+  freelancer_id  Int           @id @default(autoincrement())
+  useraccount_id Int?
+  reg_date       DateTime?     @db.Date
+  overview       String?       @db.VarChar
+  experience     String?       @db.VarChar
+  provider       String?       @db.VarChar
+  description    String?       @db.VarChar
+  links          String?       @db.VarChar
+  location       String?       @db.VarChar
+  contract       contract[]
+  user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+  has_skill      has_skill[]
+  job            job[]
+  message        message[]
+  proposal       proposal[]
+  review         review[]
+}
+
+model has_skill {
+  id             Int             @id @default(autoincrement())
+  freelancer_id  Int?
+  skill_id       Int?
+  freelancer     freelancer?     @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  skill_category skill_category? @relation(fields: [skill_id], references: [skill_id], onDelete: Cascade)
+}
+
+model job {
+  job_id           Int              @id @default(autoincrement())
+  job_description  String?          @db.VarChar
+  freelancer_id    Int?
+  client_id        Int?
+  duration_id      Int?
+  skillcategory_id Int?
+  payment_id       Int?
+  feature_id       Int?
+  client           client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  duration         duration?        @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
+  feature_job      feature_job?     @relation(fields: [feature_id], references: [feature_id], onDelete: Cascade)
+  freelancer       freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  payment          payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
+  skill_category   skill_category?  @relation(fields: [skillcategory_id], references: [skill_id], onDelete: Cascade)
+  job_attachment   job_attachment[]
+  message          message[]
+  other_category   other_category[]
+  proposal         proposal[]
+  task             task[]
+}
+
+model message {
+  message_id         Int              @id @default(autoincrement())
+  freelancer_id      Int?
+  client_id          Int?
+  job_id             Int?
+  date_time          DateTime?        @db.Timestamp(6)
+  msg_text           String?          @db.VarChar
+  proposal_id        Int?
+  proposal_status_id Int?
+  attachment         attachment[]
+  client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  proposal           proposal?        @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+  proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
+}
+
+model other_category {
+  id               Int             @id @default(autoincrement())
+  job_id           Int?
+  skillcategory_id Int?
+  job              job?            @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  skill_category   skill_category? @relation(fields: [skillcategory_id], references: [skill_id], onDelete: Cascade)
+}
+
+model payment {
+  payment_id     Int        @id @default(autoincrement())
+  type_name      String?    @db.VarChar
+  payment_amount Decimal?   @db.Decimal(10, 2)
+  contract       contract[]
+  job            job[]
+  proposal       proposal[]
+}
+
+model proposal {
+  proposal_id        Int              @id @default(autoincrement())
+  freelancer_id      Int?
+  client_id          Int?
+  job_id             Int?
+  proposal_time      DateTime?        @db.Time(6)
+  payment_id         Int?
+  proposal_status_id Int?
+  client_comment     String?          @db.VarChar
+  freelancer_comment String?          @db.VarChar
+  contract           contract[]
+  message            message[]
+  client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  payment            payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
+  proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
+}
+
+model proposal_status {
+  id       Int        @id @default(autoincrement())
+  status   String?    @db.VarChar
+  message  message[]
+  proposal proposal[]
+}
+
+model review {
+  review_id      Int         @id @default(autoincrement())
+  freelancer_id  Int?
+  client_id      Int?
+  start_time     DateTime?   @db.Time(6)
+  end_time       DateTime?   @db.Time(6)
+  rating         Decimal?    @db.Decimal
+  review_comment String?     @db.VarChar
+  client         client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer     freelancer? @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+}
+
+model skill_category {
+  skill_id       Int              @id @default(autoincrement())
+  skill_name     String?          @db.VarChar
+  has_skill      has_skill[]
+  job            job[]
+  other_category other_category[]
+}
+
+model task {
+  task_id          Int       @id @default(autoincrement())
+  task_description String?   @db.VarChar
+  job_id           Int?
+  duration_id      Int?
+  duration         duration? @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
+  job              job?      @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+}
+
+model user_account {
+  user_id       Int          @id @default(autoincrement())
+  user_name     String?      @db.VarChar
+  email         String?      @db.VarChar
+  user_password String?      @db.VarChar
+  first_name    String?      @db.VarChar
+  last_name     String?      @db.VarChar
+  gender        String?      @db.VarChar
+  image         String?      @db.VarChar
+  client        client[]
+  freelancer    freelancer[]
+}
+
+model job_attachment {
+  attachment_id Int     @id @default(autoincrement())
+  job_id        Int?
+  image         String? @db.VarChar
+  documents     String? @db.VarChar
+  job           job?    @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
