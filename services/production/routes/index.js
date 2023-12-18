@@ -21,6 +21,11 @@ var router = express.Router();
 router.post("/user", (req, res) => users.addUser(req, res));
 router.get("/users", (req, res) => users.getUser(req, res));
 
+// Freelancer
+router.get("/freelancerUsers", (req, res) => users.getFreelancerUser(req, res));
+// Client
+router.get("/clientUsers", (req, res) => users.getClientUser(req, res));
+
 //Test
 router.get('/test',  (req, res) => res.status(200).json('Docker is working'));
 module.exports = router;
