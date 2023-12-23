@@ -174,4 +174,24 @@ module.exports = {
       }
     }
   },
+  // Get freelancer by the skills 
+  async getFreelancersBySkills(req, res) {
+    try {
+      const data = await prisma.has_skill.findMany({
+        include: {
+          freelancer: true,
+          skill_category: true,
+        },
+      });
+      res.status(200).json({
+        data: data,
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        res.status(500).json({
+          message: e.meta.cause,
+        });
+      }
+    }
+  },
 };

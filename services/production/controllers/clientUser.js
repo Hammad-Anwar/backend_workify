@@ -2,7 +2,7 @@ const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 module.exports = {
-  // GET 
+  // GET
   async getClientUsers(req, res) {
     try {
       const client = await prisma.client.findMany({});
@@ -41,37 +41,18 @@ module.exports = {
       res.status(400).json({ message: "Invalid Request" });
     }
   },
-  
-  // POST 
+
+  // POST
   async addClientUser(req, res) {
-    const {
-      user_name,
-      email,
-      user_password,
-      first_name,
-      last_name,
-      gender,
-      image,
-    } = req.body;
-    if (
-      user_name ||
-      email ||
-      user_password ||
-      first_name ||
-      last_name ||
-      gender ||
-      image
-    ) {
+    const { useraccount_id, reg_date, location, overview } = req.body;
+    if (useraccount_id || reg_date || location || overview) {
       try {
         await prisma.client.create({
           data: {
-            user_name,
-            email,
-            user_password,
-            first_name,
-            last_name,
-            gender,
-            image,
+            useraccount_id,
+            reg_date,
+            location,
+            overview,
           },
         });
         res.status(200).json({ message: "Data add successfully" });
@@ -89,8 +70,7 @@ module.exports = {
 
   // PUT
   async updateClientUser(req, res) {
-    const { client_id, user_password, first_name, last_name, gender, image } =
-      req.body;
+    const { client_id, useraccount_id, location, overview } = req.body;
     if (client_id) {
       try {
         const client = await prisma.client.update({
@@ -98,11 +78,9 @@ module.exports = {
             client_id: client_id,
           },
           data: {
-            client_password,
-            first_name,
-            last_name,
-            gender,
-            image,
+            useraccount_id,
+            location,
+            overview,
           },
         });
         res.status(200).json({
@@ -160,5 +138,4 @@ module.exports = {
       }
     }
   },
- 
 };

@@ -2,6 +2,7 @@ var express = require("express");
 const users = require("../controllers/users");
 const { json } = require("express/lib/response");
 const freelancerUser = require("../controllers/freelancerUser");
+const clientUser = require("../controllers/clientUser");
 var router = express.Router();
 
 //User account Routes 
@@ -20,9 +21,15 @@ router.post("/freelancerUser", (req, res) => freelancerUser.addFreelancerUser(re
 router.put("/freelancerUser", (req, res) => freelancerUser.updateFreelancerUser(req, res));
 router.delete("/freelancerUser", (req, res) => freelancerUser.deleteFreelancerUser(req, res));
 router.get("/freelancerByUsers", (req, res) => freelancerUser.getFreelancersByUsers(req, res));
+router.get("/freelancerBySkills", (req, res) => freelancerUser.getFreelancersBySkills(req, res));
 
 // Client Routes
-router.get("/clientUsers", (req, res) => users.getClientUser(req, res));
+router.get("/clientUsers", (req, res) => clientUser.getClientUsers(req, res));
+router.get("/clientUser", (req, res) => clientUser.getClientUser(req, res));
+router.post("/clientUser", (req, res) => clientUser.addClientUser(req, res));
+router.put("/clientUser", (req, res) => clientUser.updateClientUser(req, res));
+router.delete("/clientUser", (req, res) => clientUser.deleteClientUser(req, res));
+router.get("/clientByUsers", (req, res) => clientUser.getClientByUsers(req, res));
 
 //Test
 router.get('/test',  (req, res) => res.status(200).json('Docker is working'));
