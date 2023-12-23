@@ -1,29 +1,27 @@
 var express = require("express");
-// const customers = require("../controllers/customers");
-// const products = require("../controllers/products");
-
 const users = require("../controllers/users");
 const { json } = require("express/lib/response");
+const freelancerUser = require("../controllers/freelancerUser");
 var router = express.Router();
 
-/* GET home page. */
-// router.post("/customer", (req, res) => customers.addCustomer(req, res));
-// router.get("/customers", (req, res) => customers.getCustomers(req, res));
-// router.get("/customer", (req, res) => customers.getSingleCustomer(req, res));
-// router.delete("/customer", (req, res) => customers.deleteCustomer(req, res));
-// router.put("/customer", (req, res) => customers.updateCustomer(req, res));
-
-// //Product Page 
-// router.post("/product", (req, res) => products.addProduct(req, res));
-// router.get("/products", (req, res) => products.getProduct(req, res));
-
-//User account Page
+//User account Routes 
+router.get("/users", (req, res) => users.getUsers(req, res));
+router.get("/user", (req, res) => users.getUser(req, res));
 router.post("/user", (req, res) => users.addUser(req, res));
-router.get("/users", (req, res) => users.getUser(req, res));
+router.put("/user", (req, res) => users.updateUser(req, res));
+router.delete("/user", (req, res) => users.deleteUser(req, res));
+router.get("/userLogin", (req, res) => users.getUserLogin(req, res));
+router.get("/usersByFreelancers", (req, res) => users.getUsersByFreelancers(req, res));
 
-// Freelancer
-router.get("/freelancerUsers", (req, res) => users.getFreeUser(req, res));
-// Client
+// Freelancer Routes
+router.get("/freelancerUsers", (req, res) => freelancerUser.getFreelancerUsers(req, res));
+router.get("/freelancerUser", (req, res) => freelancerUser.getFreelancerUser(req, res));
+router.post("/freelancerUser", (req, res) => freelancerUser.addFreelancerUser(req, res));
+router.put("/freelancerUser", (req, res) => freelancerUser.updateFreelancerUser(req, res));
+router.delete("/freelancerUser", (req, res) => freelancerUser.deleteFreelancerUser(req, res));
+router.get("/freelancerByUsers", (req, res) => freelancerUser.getFreelancersByUsers(req, res));
+
+// Client Routes
 router.get("/clientUsers", (req, res) => users.getClientUser(req, res));
 
 //Test

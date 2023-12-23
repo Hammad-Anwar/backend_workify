@@ -2,12 +2,12 @@ const { PrismaClient, Prisma } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 module.exports = {
-  // GET User account table data
-  async getUsers(req, res) {
+  // GET 
+  async getClientUsers(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({});
+      const client = await prisma.client.findMany({});
       res.status(200).json({
-        data: user_accounts,
+        data: client,
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -18,17 +18,17 @@ module.exports = {
     }
   },
   // GET SINGLE User data
-  async getUser(req, res) {
-    const { user_id } = req.query;
-    if (user_id) {
+  async getClientUser(req, res) {
+    const { client_id } = req.query;
+    if (client_id) {
       try {
-        const user = await prisma.user_account.findUnique({
+        const client = await prisma.client.findUnique({
           where: {
-            user_id: Number(user_id),
+            client_id: Number(client_id),
           },
         });
         res.status(200).json({
-          data: user,
+          data: client,
         });
       } catch (e) {
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -41,40 +41,9 @@ module.exports = {
       res.status(400).json({ message: "Invalid Request" });
     }
   },
-  // GET User data for login
-  async getUserLogin(req, res) {
-    const { email, user_password } = req.query;
-    if (email || user_password) {
-      console.log(user_name);
-      try {
-        const user = await prisma.user_account.findMany({
-          where: {
-            email: { contains: String(email) },
-          },
-          include: {
-            client: true,
-            freelancer: true,
-          },
-        });
-        if (!user) {
-          return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        res.status(200).json({
-          data: user,
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
-      }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
-    }
-  },
-  // POST user data
-  async addUser(req, res) {
+  
+  // POST 
+  async addClientUser(req, res) {
     const {
       user_name,
       email,
@@ -94,7 +63,7 @@ module.exports = {
       image
     ) {
       try {
-        await prisma.user_account.create({
+        await prisma.client.create({
           data: {
             user_name,
             email,
@@ -119,17 +88,17 @@ module.exports = {
   },
 
   // PUT
-  async updateUser(req, res) {
-    const { user_id, user_password, first_name, last_name, gender, image } =
+  async updateClientUser(req, res) {
+    const { client_id, user_password, first_name, last_name, gender, image } =
       req.body;
-    if (user_id) {
+    if (client_id) {
       try {
-        const user = await prisma.user_account.update({
+        const client = await prisma.client.update({
           where: {
-            user_id: user_id,
+            client_id: client_id,
           },
           data: {
-            user_password,
+            client_password,
             first_name,
             last_name,
             gender,
@@ -138,7 +107,7 @@ module.exports = {
         });
         res.status(200).json({
           message: "Data Update Successfully",
-          data: user,
+          data: client,
         });
       } catch (e) {
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -150,13 +119,13 @@ module.exports = {
     } else res.status(400).json({ message: "Invalid Request" });
   },
   // DELETE
-  async deleteUser(req, res) {
-    const { user_id } = req.body;
-    if (user_id) {
+  async deleteClientUser(req, res) {
+    const { client_id } = req.body;
+    if (client_id) {
       try {
-        await prisma.user_account.delete({
+        await prisma.client.delete({
           where: {
-            user_id: user_id,
+            client_id: Number(client_id),
           },
         });
         res.status(200).json({
@@ -172,16 +141,16 @@ module.exports = {
     } else res.status(400).json({ message: "Invalid Request" });
   },
 
-  // Get freelancer with user table
-  async getUsersByFreelancers(req, res) {
+  // GET User as Client
+  async getClientByUsers(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({
+      const clients = await prisma.client.findMany({
         include: {
-          freelancer: true,
+          user_account: true,
         },
       });
       res.status(200).json({
-        data: user_accounts,
+        data: clients,
       });
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -191,24 +160,5 @@ module.exports = {
       }
     }
   },
-
-  // Get client table as user
-  async getUsersByClients(req, res) {
-    try {
-      const user_accounts = await prisma.user_account.findMany({
-        include: {
-          client: true,
-        },
-      });
-      res.status(200).json({
-        data: user_accounts,
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
-    }
-  },
+ 
 };

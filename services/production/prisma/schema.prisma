@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -10,7 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = "postgresql://postgres:pass@host.docker.internal:5434/workifyDb?schema=public"
 }
-
 
 model attachment {
   attachment_id   Int      @id @default(autoincrement())
@@ -200,9 +196,9 @@ model task {
 
 model user_account {
   user_id       Int          @id @default(autoincrement())
-  user_name     String?      @db.VarChar
-  email         String?      @db.VarChar
-  user_password String?      @db.VarChar
+  user_name     String       @unique(map: "user_name") @db.VarChar
+  email         String       @unique(map: "email") @db.VarChar
+  user_password String       @db.VarChar
   first_name    String?      @db.VarChar
   last_name     String?      @db.VarChar
   gender        String?      @db.VarChar
