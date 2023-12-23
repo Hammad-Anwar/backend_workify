@@ -22,7 +22,7 @@ router.post("/user", (req, res) => users.addUser(req, res));
 router.get("/users", (req, res) => users.getUser(req, res));
 
 // Freelancer
-router.get("/freelancerUsers", (req, res) => users.getFreelancerUser(req, res));
+router.get("/freelancerUsers", (req, res) => users.getFreeUser(req, res));
 // Client
 router.get("/clientUsers", (req, res) => users.getClientUser(req, res));
 
