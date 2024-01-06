@@ -7,6 +7,7 @@ var router = express.Router();
 
 //User account Routes 
 router.get("/users", (req, res) => users.getUsers(req, res));
+router.post("/login", (req, res) => users.login(req, res));
 router.get("/user", (req, res) => users.getUser(req, res));
 router.post("/user", (req, res) => users.addUser(req, res));
 router.put("/user", (req, res) => users.updateUser(req, res));

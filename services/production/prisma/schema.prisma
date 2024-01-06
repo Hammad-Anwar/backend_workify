@@ -18,7 +18,8 @@ model attachment {
 model client {
   client_id      Int           @id @default(autoincrement())
   useraccount_id Int?
-  reg_date       DateTime?     @db.Date
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
   location       String?       @db.VarChar
   overview       String?       @db.VarChar
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
@@ -59,7 +60,8 @@ model feature_job {
 model freelancer {
   freelancer_id  Int           @id @default(autoincrement())
   useraccount_id Int?
-  reg_date       DateTime?     @db.Date
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
   overview       String?       @db.VarChar
   experience     String?       @db.VarChar
   provider       String?       @db.VarChar
@@ -195,16 +197,26 @@ model task {
 }
 
 model user_account {
-  user_id       Int          @id @default(autoincrement())
-  user_name     String       @unique(map: "user_name") @db.VarChar
-  email         String       @unique(map: "email") @db.VarChar
-  user_password String       @db.VarChar
-  first_name    String?      @db.VarChar
-  last_name     String?      @db.VarChar
-  gender        String?      @db.VarChar
-  image         String?      @db.VarChar
-  client        client[]
-  freelancer    freelancer[]
+  user_id    Int          @id @default(autoincrement())
+  user_name  String       @unique(map: "user_name") @db.VarChar
+  email      String       @unique(map: "email") @db.VarChar
+  password   String       @db.VarChar
+  first_name String?      @db.VarChar
+  last_name  String?      @db.VarChar
+  gender     String?      @db.VarChar
+  image      String?      @db.VarChar
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  role_id    Int
+  role       role         @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  client     client[]
+  freelancer freelancer[]
+}
+
+model role {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar
+  user_account user_account[]
 }
 
 model job_attachment {
