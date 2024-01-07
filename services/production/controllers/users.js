@@ -14,11 +14,29 @@ module.exports = {
         data: user_accounts,
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+  // GET SINGLE User data
+  async getUser(req, res) {
+    try {
+      const { user_id } = req.query;
+      if (validator.isEmpty(user_id.toString()) || !user_id)
+        return res.status(400).send({ message: "Please provide all fields " });
+      const user = await prisma.user_account.findUnique({
+        where: {
+          user_id: Number(user_id),
+        },
+        include: {
+          freelancer: true,
+          client: true,
+        },
+      });
+      res.status(200).json({
+        data: user,
+      });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
@@ -75,201 +93,406 @@ module.exports = {
     }
   },
 
-  // GET SINGLE User data
-  async getUser(req, res) {
-    const { user_id } = req.query;
-    if (user_id) {
-      try {
-        const user = await prisma.user_account.findUnique({
-          where: {
-            user_id: Number(user_id),
-          },
-        });
-        res.status(200).json({
-          data: user,
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
-      }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
-    }
-  },
-  // GET User data for login
-  // async getUserLogin(req, res) {
-  //   const { email, user_password } = req.query;
-  //   if (email || user_password) {
-  //     console.log(user_name);
-  //     try {
-  //       const user = await prisma.user_account.findMany({
-  //         where: {
-  //           email: { contains: String(email) },
-  //         },
-  //         include: {
-  //           client: true,
-  //           freelancer: true,
-  //         },
-  //       });
-  //       if (!user) {
-  //         return res.status(401).json({ error: "Invalid credentials" });
-  //       }
-  //       res.status(200).json({
-  //         data: user,
-  //       });
-  //     } catch (e) {
-  //       if (e instanceof Prisma.PrismaClientKnownRequestError) {
-  //         res.status(500).json({
-  //           message: e.meta.cause,
-  //         });
-  //       }
-  //     }
-  //   } else {
-  //     res.status(400).json({ message: "Invalid Request" });
-  //   }
-  // },
   // POST user data
+  async signUp(req, res) {
+    try {
+      const {
+        user_name,
+        email,
+        password,
+        first_name,
+        last_name,
+        gender,
+        role_id,
+      } = req.body;
+      if (
+        validator.isEmpty(user_name) ||
+        validator.isEmpty(email) ||
+        validator.isEmpty(password) ||
+        validator.isEmpty(first_name) ||
+        validator.isEmpty(last_name) ||
+        validator.isEmpty(gender) ||
+        validator.isEmpty(role_id.toString())
+      )
+        return res.status(400).send({ message: "Please provide all fields " });
+
+      const existsUserName = await prisma.user_account.findUnique({
+        where: { user_name: user_name },
+      });
+      if (existsUserName)
+        return res
+          .status(409)
+          .send({ message: "This user name is already taken" });
+
+      const existsEmail = await prisma.user_account.findUnique({
+        where: { email: email },
+      });
+      if (existsEmail) {
+        return res
+          .status(409)
+          .send({ message: "User with this email already exists" });
+      }
+
+      const user = await prisma.user_account.create({
+        data: {
+          user_name,
+          email,
+          password: crypto
+            .createHmac("sha256", "secret")
+            .update(password)
+            .digest("hex"),
+          first_name,
+          last_name,
+          gender,
+          role_id,
+        },
+        include: {
+          role: true,
+        },
+      });
+      res.status(200).json({
+        status: 200,
+        message: "Data add successfully",
+        data: generateToken(user),
+      });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // ADD USER POST
   async addUser(req, res) {
-    const {
-      user_name,
-      email,
-      user_password,
-      first_name,
-      last_name,
-      gender,
-      image,
-    } = req.body;
-    if (
-      user_name ||
-      email ||
-      user_password ||
-      first_name ||
-      last_name ||
-      gender ||
-      image
-    ) {
-      try {
-        await prisma.user_account.create({
-          data: {
-            user_name,
-            email,
-            user_password,
-            first_name,
-            last_name,
-            gender,
-            image,
+    try {
+      const { user_id, image, userData } = req.body;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(image) || validator.isEmpty(user_id.toString())) {
+          return res.status(400).send({ message: "Please provide all fields" });
+        }
+
+        const existsUser = await prisma.user_account.findUnique({
+          where: { user_id: user_id },
+          include: {
+            role: true,
           },
         });
-        res.status(200).json({ message: "Data add successfully" });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
+
+        if (existsUser) {
+          if (existsUser.role.name === "freelancer") {
+            const {
+              overview,
+              experience,
+              provider,
+              description,
+              links,
+              location,
+            } = userData;
+
+            const freelancerData = await prisma.freelancer.create({
+              data: {
+                overview,
+                experience,
+                provider,
+                description,
+                links,
+                location,
+                user_account: {
+                  connect: {
+                    user_id: existsUser.user_id,
+                  },
+                },
+              },
+            });
+
+            await prisma.user_account.update({
+              where: { user_id: existsUser.user_id },
+              data: {
+                image, // assuming 'image' is the Base64-encoded image string
+              },
+            });
+
+            res.status(200).json({
+              status: 200,
+              message: "Data added successfully in freelancer user",
+              data: freelancerData,
+            });
+          } else if (existsUser.role.name === "client") {
+            const { overview, location } = userData;
+
+            const clientData = await prisma.client.create({
+              data: {
+                overview,
+                location,
+                user_account: {
+                  connect: {
+                    user_id: existsUser.user_id,
+                  },
+                },
+              },
+            });
+
+            await prisma.user_account.update({
+              where: { user_id: existsUser.user_id },
+              data: {
+                image, // assuming 'image' is the Base64-encoded image string
+              },
+            });
+
+            res.status(200).json({
+              status: 200,
+              message: "Data added successfully in client user",
+              data: clientData,
+            });
+          }
+        } else {
+          return res
+            .status(404)
+            .send({ status: 404, message: " User is not found!!!" });
         }
+      } else {
+        return resUser
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
       }
-    } else {
-      res.status(400).json({ message: "Invalid Request" });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+  // POST Add skills for freelancer
+  async addSkills(req, res) {
+    try {
+      const { user_id, has_skills } = req.body;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+
+        const freelancerExists = await prisma.freelancer.findFirst({
+          where: {
+            useraccount_id: Number(user_id),
+          },
+        });
+
+        if (freelancerExists) {
+          const skillCategoryData = has_skills.map(({ skill_id }) => ({
+            skill_id,
+            freelancer_id: freelancerExists.freelancer_id,
+          }));
+
+          const skillsCat = await prisma.has_skill.createMany({
+            data: skillCategoryData,
+          });
+
+          res.status(200).json({
+            status: 200,
+            message: "Skills added successfully for freelancer",
+            data: skillCategoryData,
+          });
+        } else {
+          return res
+            .status(404)
+            .send({ status: 404, data: "Freelancer not found" });
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
-
-  // PUT
+  // PUT Update both users info
   async updateUser(req, res) {
-    const { user_id, user_password, first_name, last_name, gender, image } =
-      req.body;
-    if (user_id) {
-      try {
-        const user = await prisma.user_account.update({
-          where: {
-            user_id: user_id,
-          },
-          data: {
-            user_password,
-            first_name,
-            last_name,
-            gender,
-            image,
-          },
-        });
-        res.status(200).json({
-          message: "Data Update Successfully",
-          data: user,
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
-      }
-    } else res.status(400).json({ message: "Invalid Request" });
-  },
-  // DELETE
-  async deleteUser(req, res) {
-    const { user_id } = req.body;
-    if (user_id) {
-      try {
-        await prisma.user_account.delete({
-          where: {
-            user_id: user_id,
-          },
-        });
-        res.status(200).json({
-          message: "Data Delete Successfully",
-        });
-      } catch (e) {
-        if (e instanceof Prisma.PrismaClientKnownRequestError) {
-          res.status(500).json({
-            message: e.meta.cause,
-          });
-        }
-      }
-    } else res.status(400).json({ message: "Invalid Request" });
-  },
-
-
-  
-  // Get freelancer with user table
-  async getUsersByFreelancers(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({
-        include: {
-          freelancer: true,
-        },
-      });
-      res.status(200).json({
-        data: user_accounts,
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
+      const { user_id, image, userData } = req.body;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(user_id.toString()) || validator.isEmpty(image)) {
+          return res.status(400).send({ message: "Please provide all fields" });
+        }
+
+        const existsUser = await prisma.user_account.findUnique({
+          where: { user_id: user_id },
+          include: {
+            role: true,
+          },
         });
+
+        if (existsUser) {
+          if (existsUser.role.name === "freelancer") {
+            const {
+              overview,
+              experience,
+              provider,
+              description,
+              links,
+              location,
+            } = userData;
+
+            const id = await prisma.freelancer.findFirst({
+              where: {
+                useraccount_id: user_id,
+              },
+            });
+
+            const freelancerData = await prisma.freelancer.update({
+              where: {
+                freelancer_id: Number(id.freelancer_id),
+              },
+              data: {
+                overview,
+                experience,
+                provider,
+                description,
+                links,
+                location,
+              },
+            });
+            await prisma.user_account.update({
+              where: { user_id: existsUser.user_id },
+              data: {
+                image, // assuming 'image' is the Base64-encoded image string
+              },
+            });
+
+            res.status(200).json({
+              status: 200,
+              message: "Data update successfully in freelancer user",
+              data: freelancerData,
+            });
+          } else if (existsUser.role.name === "client") {
+            const { overview, location } = userData;
+
+            const id = await prisma.client.findFirst({
+              where: {
+                useraccount_id: user_id,
+              },
+            });
+
+            const clientData = await prisma.client.update({
+              where: {
+                client_id: Number(id.client_id),
+              },
+              data: {
+                overview,
+                location,
+              },
+            });
+
+            await prisma.user_account.update({
+              where: { user_id: existsUser.user_id },
+              data: {
+                image, // assuming 'image' is the Base64-encoded image string
+              },
+            });
+
+            res.status(200).json({
+              status: 200,
+              message: "Data update successfully in client user",
+              data: clientData,
+            });
+          }
+        } else {
+          return res
+            .status(404)
+            .send({ status: 404, message: "User is not found!!!" });
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
       }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
-  // Get client table as user
-  async getUsersByClients(req, res) {
+  // PUT Update password
+  async updatePassword(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({
-        include: {
-          client: true,
+      const { user_id, oldPassword, newPassword } = req.body;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (
+          validator.isEmpty(user_id.toString()) ||
+          validator.isEmpty(oldPassword) ||
+          validator.isEmpty(newPassword)
+        ) {
+          return res.status(400).send({ message: "Please provide all fields" });
+        }
+
+        const existsUser = await prisma.user_account.findUnique({
+          where: { user_id: user_id },
+        });
+        if (existsUser) {
+          const correctPassword = await prisma.user_account.findFirst({
+            where: {
+              password: crypto
+                .createHmac("sha256", "secret")
+                .update(oldPassword)
+                .digest("hex"),
+            },
+          });
+          if (correctPassword) {
+            const updatedUser = await prisma.user_account.update({
+              where: { user_id: user_id },
+              data: {
+                password: crypto
+                  .createHmac("sha256", "secret")
+                  .update(newPassword)
+                  .digest("hex"),
+              },
+            });
+            return res.status(200).send({
+              status: 200,
+              message: "Password Changed!!",
+              data: updatedUser,
+            });
+          } else {
+            return res
+              .status(401)
+              .send({ status: 401, data: "Old Password is incorrect!!" });
+          }
+        } else {
+          return res
+            .status(404)
+            .send({ status: 404, data: "User is not Found" });
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // DELETE User
+  async deleteUser(req, res) {
+    try {
+      const { user_id } = req.query;
+      if (validator.isEmpty(user_id.toString())) {
+        return res.status(400).send({ message: "Please provide all fields" });
+      }
+      await prisma.user_account.delete({
+        where: {
+          user_id: Number(user_id),
         },
       });
       res.status(200).json({
-        data: user_accounts,
+        message: "Data Delete Successfully",
       });
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        res.status(500).json({
-          message: e.meta.cause,
-        });
-      }
+      return res.status(500).json({ status: 500, message: e.message });
     }
   },
 };
