@@ -6,252 +6,42 @@ const validator = require("validator");
 const crypto = require("crypto");
 
 module.exports = {
-  // GET all Job table data
-  async getJobs(req, res) {
+  // GET User account table data
+  async getUsers(req, res) {
     try {
-      const job = await prisma.job.findMany({});
+      const user_accounts = await prisma.user_account.findMany({});
       res.status(200).json({
-        data: job,
+        data: user_accounts,
+      });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+  // GET SINGLE User data without token
+  async getUser(req, res) {
+    try {
+      const { user_id } = req.query;
+      if (validator.isEmpty(user_id.toString()) || !user_id)
+        return res.status(400).send({ message: "Please provide all fields " });
+      const user = await prisma.user_account.findUnique({
+        where: {
+          user_id: Number(user_id),
+        },
+        include: {
+          freelancer: true,
+          client: true,
+        },
+      });
+      res.status(200).json({
+        status: 200,
+        data: user,
       });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
 
-  // GET Job's data with client id
-  async getJobUsingClient(req, res) {
-    try {
-      const { client_id } = req.query;
-      let token = req.headers["authorization"];
-
-      if (token) {
-        token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(client_id.toString()) || !client_id)
-          return res
-            .status(400)
-            .send({ message: "Please provide all fields " });
-        const post = await prisma.job.findMany({
-          where: {
-            client_id: Number(client_id),
-          },
-          select: {
-            job_description: true,
-            duration: true,
-            image: true,
-            updated_at: true,
-            client: {
-              select: {
-                client_id: true,
-                user_account: {
-                  select: {
-                    first_name: true,
-                    last_name: true,
-                    image: true,
-                  },
-                },
-              },
-            },
-            skill_category: {
-              select: {
-                skill_name: true,
-              },
-            },
-          },
-        });
-        const modifiedPosts = post.map((job) => ({
-          ...job,
-          skill_name: job.skill_category.skill_name,
-          skill_category: undefined,
-
-          first_name: job.client?.user_account?.first_name,
-          last_name: job.client?.user_account?.last_name,
-          profile_image: job.client?.user_account?.image,
-          client: undefined,
-        }));
-        res.status(200).json({
-          status: 200,
-          data: modifiedPosts,
-        });
-      } else {
-        return res
-          .status(401)
-          .send({ status: 401, data: "Please provide a valid auth token" });
-      }
-    } catch (e) {
-      return res.status(500).json({ status: 500, message: e.message });
-    }
-  },
-
-  // GET Job's data with freelancer id
-  async getJobUsingFreelancer(req, res) {
-    try {
-      const { freelancer_id } = req.query;
-      let token = req.headers["authorization"];
-
-      if (token) {
-        token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(freelancer_id.toString()) || !freelancer_id)
-          return res
-            .status(400)
-            .send({ message: "Please provide all fields " });
-        const post = await prisma.job.findMany({
-          where: {
-            freelancer_id: Number(freelancer_id),
-          },
-          select: {
-            job_description: true,
-            duration: true,
-            image: true,
-            updated_at: true,
-            freelancer: {
-              select: {
-                freelancer_id: true,
-                user_account: {
-                  select: {
-                    first_name: true,
-                    last_name: true,
-                    image: true,
-                  },
-                },
-              },
-            },
-            skill_category: {
-              select: {
-                skill_name: true,
-              },
-            },
-          },
-        });
-        const modifiedPosts = post.map((job) => ({
-          ...job,
-          skill_name: job.skill_category.skill_name,
-          skill_category: undefined,
-
-          first_name: job.freelancer?.user_account?.first_name,
-          last_name: job.freelancer?.user_account?.last_name,
-          profile_image: job.freelancer?.user_account?.image,
-          freelancer: undefined,
-        }));
-        res.status(200).json({
-          status: 200,
-          data: modifiedPosts,
-        });
-      } else {
-        return res
-          .status(401)
-          .send({ status: 401, data: "Please provide a valid auth token" });
-      }
-    } catch (e) {
-      return res.status(500).json({ status: 500, message: e.message });
-    }
-  },
-
-  //   Get all job of selected skills
-  async getJobUsingSkills(req, res) {
-    try {
-      const { freelancer_id } = req.query;
-      let token = req.headers["authorization"];
-
-      if (token) {
-        token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(freelancer_id.toString()) || !freelancer_id)
-          return res
-            .status(400)
-            .send({ message: "Please provide all fields " });
-        const freelancerSkillsData = await prisma.has_skill.findMany({
-          where: {
-            freelancer_id: Number(freelancer_id),
-          },
-          select: {
-            skill_id: true,
-          },
-        });
-        if (freelancerSkillsData && freelancerSkillsData.length > 0) {
-          const freelancerSkills = freelancerSkillsData.map(
-            (skill) => skill.skill_id
-          );
-          if (freelancerSkills) {
-            const jobs = await prisma.job.findMany({
-              where: {
-                skillcategory_id: {
-                  in: freelancerSkills,
-                },
-              },
-              orderBy: {
-                job_id: "asc",
-              },
-              select: {
-                job_id: true,
-                job_description: true,
-                duration: true,
-                image: true,
-                updated_at: true,
-                skill_category: {
-                  select: {
-                    skill_name: true,
-                  },
-                },
-                freelancer: {
-                  select: {
-                    freelancer_id: true,
-                    user_account: {
-                      select: {
-                        first_name: true,
-                        last_name: true,
-                        image: true,
-                      },
-                    },
-                  },
-                },
-                client: {
-                  select: {
-                    client_id: true,
-                    user_account: {
-                      select: {
-                        first_name: true,
-                        last_name: true,
-                        image: true,
-                      },
-                    },
-                  },
-                },
-              },
-            });
-            const modifiedJobs = jobs.map((job) => ({
-              ...job,
-              skill_name: job.skill_category.skill_name,
-              skill_category: undefined,
-              client: {
-                first_name: job.client?.user_account?.first_name,
-                last_name: job.client?.user_account?.last_name,
-                image: job.client?.user_account?.image,
-              },
-              freelancer: {
-                first_name: job.freelancer?.user_account?.first_name,
-                last_name: job.freelancer?.user_account?.last_name,
-                image: job.freelancer?.user_account?.image,
-              },
-            }));
-            res.status(200).json({
-              status: 200,
-              data: modifiedJobs,
-            });
-          }
-        } else {
-          return res.status(404).json({
-            status: 404,
-            message: "No skills found for the freelancer.",
-          });
-        }
-      } else {
-        return res
-          .status(401)
-          .send({ status: 401, data: "Please provide a valid auth token" });
-      }
-    } catch (e) {
-      return res.status(500).json({ status: 500, message: e.message });
-    }
-  },
+  
 
   // ADD USER POST
   async addUser(req, res) {
@@ -299,7 +89,7 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              },
+              }
             });
 
             await prisma.user_account.update({
@@ -329,7 +119,7 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              },
+              }
             });
 
             await prisma.user_account.update({
@@ -351,7 +141,7 @@ module.exports = {
             .send({ status: 404, message: " User is not found!!!" });
         }
       } else {
-        return res
+        return resUser
           .status(401)
           .send({ status: 401, data: "Please provide a valid auth token" });
       }
@@ -512,6 +302,7 @@ module.exports = {
     }
   },
 
+ 
   // DELETE User
   async deleteUser(req, res) {
     try {

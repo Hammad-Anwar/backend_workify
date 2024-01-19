@@ -44,16 +44,18 @@ model contract {
   proposal      proposal?   @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
 }
 
-model duration {
-  duration_id Int     @id @default(autoincrement())
-  text_column String? @db.VarChar
-  job         job[]
-  task        task[]
-}
+// model duration {
+//   duration_id Int     @id @default(autoincrement())
+//   text_column String? @db.VarChar
+//   job         job[]
+//   task        task[]
+// }
 
 model feature_job {
-  feature_id Int     @id @default(autoincrement())
-  status     String? @db.VarChar
+  feature_id Int      @id @default(autoincrement())
+  status     String?  @db.VarChar
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   job        job[]
 }
 
@@ -88,14 +90,16 @@ model has_skill {
 model job {
   job_id           Int              @id @default(autoincrement())
   job_description  String?          @db.VarChar
+  duration         String?          @db.VarChar
+  image            String?          @db.VarChar
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
   freelancer_id    Int?
   client_id        Int?
-  duration_id      Int?
   skillcategory_id Int?
   payment_id       Int?
   feature_id       Int?
   client           client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-  duration         duration?        @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
   feature_job      feature_job?     @relation(fields: [feature_id], references: [feature_id], onDelete: Cascade)
   freelancer       freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
   payment          payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
@@ -171,8 +175,8 @@ model review {
   review_id      Int         @id @default(autoincrement())
   freelancer_id  Int?
   client_id      Int?
-  start_time     DateTime?   @db.Time(6)
-  end_time       DateTime?   @db.Time(6)
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
   rating         Decimal?    @db.Decimal
   review_comment String?     @db.VarChar
   client         client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
@@ -188,12 +192,12 @@ model skill_category {
 }
 
 model task {
-  task_id          Int       @id @default(autoincrement())
-  task_description String?   @db.VarChar
+  task_id          Int     @id @default(autoincrement())
+  task_description String? @db.VarChar
   job_id           Int?
   duration_id      Int?
-  duration         duration? @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
-  job              job?      @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  // duration         duration? @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
+  job              job?    @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
 
 model user_account {

@@ -17,7 +17,7 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-  // GET SINGLE User data
+  // GET SINGLE User data without token
   async getUser(req, res) {
     try {
       const { user_id } = req.query;
@@ -33,6 +33,7 @@ module.exports = {
         },
       });
       res.status(200).json({
+        status: 200,
         data: user,
       });
     } catch (e) {
@@ -58,6 +59,10 @@ module.exports = {
           role: true,
         },
       });
+      if (!userFound) {
+        return res.status(404).send({status: 404, message: "User not found or Incorrect email or password!" });
+      }
+      
       if (userFound.role.name == "freelancer") {
         const freelancerUser = await prisma.freelancer.findFirst({
           where: {
@@ -87,7 +92,7 @@ module.exports = {
           message: "Client",
         });
       }
-      return res.status(404).send({ message: "No such user found!" });
+      return res.status(500).json({ status: 500, message: "Invalid role" });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
@@ -204,6 +209,9 @@ module.exports = {
                   },
                 },
               },
+              include: {
+                user_account: true,
+              }
             });
 
             await prisma.user_account.update({
@@ -231,6 +239,9 @@ module.exports = {
                   },
                 },
               },
+              include: {
+                user_account: true,
+              }
             });
 
             await prisma.user_account.update({
@@ -252,7 +263,7 @@ module.exports = {
             .send({ status: 404, message: " User is not found!!!" });
         }
       } else {
-        return resUser
+        return res
           .status(401)
           .send({ status: 401, data: "Please provide a valid auth token" });
       }
