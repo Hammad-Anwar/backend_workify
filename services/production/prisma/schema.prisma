@@ -53,7 +53,7 @@ model contract {
 
 model feature_job {
   feature_id Int      @id @default(autoincrement())
-  status     String?  @db.VarChar
+  status     Boolean?  @db.Boolean
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   job        job[]

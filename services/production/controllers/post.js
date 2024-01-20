@@ -56,12 +56,25 @@ module.exports = {
                 skill_name: true,
               },
             },
+            feature_job: {
+              select: {
+                status: true,
+              },
+            },
+            payment: {
+              select: {
+                payment_amount: true,
+              },
+            },
           },
         });
         const modifiedPosts = post.map((job) => ({
           ...job,
           skill_name: job.skill_category.skill_name,
           skill_category: undefined,
+          payment_amount: job.payment?.payment_amount,
+          payment: undefined,
+          feature_job: job.feature_job?.status,
 
           first_name: job.client?.user_account?.first_name,
           last_name: job.client?.user_account?.last_name,
@@ -120,12 +133,26 @@ module.exports = {
                 skill_name: true,
               },
             },
+            feature_job: {
+              select: {
+                status: true,
+              },
+            },
+            payment: {
+              select: {
+                payment_amount: true,
+              },
+            },
           },
         });
         const modifiedPosts = post.map((job) => ({
           ...job,
           skill_name: job.skill_category.skill_name,
           skill_category: undefined,
+          payment_amount: job.payment?.payment_amount,
+          payment: undefined,
+          feature_job: job.feature_job?.status,
+          // skill_category: undefined,
 
           first_name: job.freelancer?.user_account?.first_name,
           last_name: job.freelancer?.user_account?.last_name,
@@ -215,12 +242,18 @@ module.exports = {
                     },
                   },
                 },
+                payment: {
+                  select: {
+                    payment_amount: true,
+                  },
+                },
               },
             });
             const modifiedJobs = jobs.map((job) => ({
               ...job,
               skill_name: job.skill_category.skill_name,
               skill_category: undefined,
+
               client: {
                 first_name: job.client?.user_account?.first_name,
                 last_name: job.client?.user_account?.last_name,
@@ -231,6 +264,8 @@ module.exports = {
                 last_name: job.freelancer?.user_account?.last_name,
                 image: job.freelancer?.user_account?.image,
               },
+              payment_amount: job.payment?.payment_amount,
+              payment: undefined,
             }));
             res.status(200).json({
               status: 200,
@@ -254,14 +289,14 @@ module.exports = {
   },
 
   // ADD USER POST
-  async addUser(req, res) {
+  async addJob(req, res) {
     try {
-      const { user_id, image, userData } = req.body;
+      const { user_id, postData } = req.body;
       let token = req.headers["authorization"];
 
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(image) || validator.isEmpty(user_id.toString())) {
+        if (validator.isEmpty(user_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
 
@@ -269,80 +304,111 @@ module.exports = {
           where: { user_id: user_id },
           include: {
             role: true,
+            freelancer: true,
+            client: true,
           },
         });
+        const freelancerId = existsUser.freelancer.map(
+          (item) => item.freelancer_id
+        );
+        const clientId = existsUser.client.map((item) => item.client_id);
 
         if (existsUser) {
           if (existsUser.role.name === "freelancer") {
             const {
-              overview,
-              experience,
-              provider,
-              description,
-              links,
-              location,
-            } = userData;
+              job_description,
+              duration,
+              image,
+              payment,
+              skillcategory_id,
+              feature_job,
+            } = postData;
 
-            const freelancerData = await prisma.freelancer.create({
+            const freelancerPost = await prisma.job.create({
               data: {
-                overview,
-                experience,
-                provider,
-                description,
-                links,
-                location,
-                user_account: {
+                freelancer: {
                   connect: {
-                    user_id: existsUser.user_id,
+                    freelancer_id: Number(freelancerId),
+                  },
+                },
+
+                job_description,
+                duration,
+                image,
+                skill_category: {
+                  connect: {
+                    skill_id: Number(skillcategory_id),
+                  },
+                },
+                payment: {
+                  create: {
+                    payment_amount: parseFloat(payment),
+                  },
+                },
+                feature_job: {
+                  create: {
+                    status: Boolean(feature_job),
                   },
                 },
               },
               include: {
-                user_account: true,
+                freelancer: true,
+                skill_category: true,
+                payment: true,
+                feature_job: true,
               },
             });
-
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
             res.status(200).json({
               status: 200,
               message: "Data added successfully in freelancer user",
-              data: freelancerData,
+              data: freelancerPost,
             });
           } else if (existsUser.role.name === "client") {
-            const { overview, location } = userData;
+            const {
+              job_description,
+              duration,
+              image,
+              payment,
+              skillcategory_id,
+              feature_job,
+            } = postData;
 
-            const clientData = await prisma.client.create({
+            const clientPost = await prisma.job.create({
               data: {
-                overview,
-                location,
-                user_account: {
+                client: {
                   connect: {
-                    user_id: existsUser.user_id,
+                    client_id: Number(clientId),
+                  },
+                },
+                job_description,
+                duration,
+                image,
+                skill_category: {
+                  connect: {
+                    skill_id: Number(skillcategory_id),
+                  },
+                },
+                payment: {
+                  create: {
+                    payment_amount: parseFloat(payment),
+                  },
+                },
+                feature_job: {
+                  create: {
+                    status: Boolean(feature_job),
                   },
                 },
               },
               include: {
-                user_account: true,
+                skill_category: true,
+                payment: true,
+                feature_job: true,
               },
             });
-
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
             res.status(200).json({
               status: 200,
               message: "Data added successfully in client user",
-              data: clientData,
+              data: clientPost,
             });
           }
         } else {
@@ -359,149 +425,72 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-  // POST Add skills for freelancer
-  async addSkills(req, res) {
-    try {
-      const { user_id, has_skills } = req.body;
-      let token = req.headers["authorization"];
-
-      if (token) {
-        token = await verifyToken(token.split(" ")[1]);
-
-        const freelancerExists = await prisma.freelancer.findFirst({
-          where: {
-            useraccount_id: Number(user_id),
-          },
-        });
-
-        if (freelancerExists) {
-          const skillCategoryData = has_skills.map(({ skill_id }) => ({
-            skill_id,
-            freelancer_id: freelancerExists.freelancer_id,
-          }));
-
-          const skillsCat = await prisma.has_skill.createMany({
-            data: skillCategoryData,
-          });
-
-          res.status(200).json({
-            status: 200,
-            message: "Skills added successfully for freelancer",
-            data: skillCategoryData,
-          });
-        } else {
-          return res
-            .status(404)
-            .send({ status: 404, data: "Freelancer not found" });
-        }
-      } else {
-        return res
-          .status(401)
-          .send({ status: 401, data: "Please provide a valid auth token" });
-      }
-    } catch (e) {
-      return res.status(500).json({ status: 500, message: e.message });
-    }
-  },
 
   // PUT Update both users info
-  async updateUser(req, res) {
+  async updateJob(req, res) {
     try {
-      const { user_id, image, userData } = req.body;
+      const {
+        job_id,
+        job_description,
+        duration,
+        image,
+        skillcategory_id,
+        payment_id,
+        payment_amount,
+        feature_id,
+        feature_job,
+      } = req.body;
       let token = req.headers["authorization"];
 
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(user_id.toString()) || validator.isEmpty(image)) {
+        if (validator.isEmpty(job_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
 
-        const existsUser = await prisma.user_account.findUnique({
-          where: { user_id: user_id },
+        const jobData = await prisma.job.update({
+          where: {
+            job_id,
+          },
+          data: {
+            job_description,
+            duration,
+            image,
+            skill_category: {
+              connect: {
+                skill_id: skillcategory_id,
+              },
+            },
+            payment: {
+              connect: {
+                payment_id: payment_id,
+              },
+
+              update: {
+                payment_amount: payment_amount,
+              },
+            },
+            feature_job: {
+              connect: {
+                feature_id: feature_id,
+              },
+              update: {
+                status: Boolean(feature_job),
+              },
+            },
+          },
           include: {
-            role: true,
+            skill_category: true,
+            payment: true,
+            feature_job: true,
           },
         });
 
-        if (existsUser) {
-          if (existsUser.role.name === "freelancer") {
-            const {
-              overview,
-              experience,
-              provider,
-              description,
-              links,
-              location,
-            } = userData;
-
-            const id = await prisma.freelancer.findFirst({
-              where: {
-                useraccount_id: user_id,
-              },
-            });
-
-            const freelancerData = await prisma.freelancer.update({
-              where: {
-                freelancer_id: Number(id.freelancer_id),
-              },
-              data: {
-                overview,
-                experience,
-                provider,
-                description,
-                links,
-                location,
-              },
-            });
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
-            res.status(200).json({
-              status: 200,
-              message: "Data update successfully in freelancer user",
-              data: freelancerData,
-            });
-          } else if (existsUser.role.name === "client") {
-            const { overview, location } = userData;
-
-            const id = await prisma.client.findFirst({
-              where: {
-                useraccount_id: user_id,
-              },
-            });
-
-            const clientData = await prisma.client.update({
-              where: {
-                client_id: Number(id.client_id),
-              },
-              data: {
-                overview,
-                location,
-              },
-            });
-
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
-            res.status(200).json({
-              status: 200,
-              message: "Data update successfully in client user",
-              data: clientData,
-            });
-          }
-        } else {
-          return res
-            .status(404)
-            .send({ status: 404, message: "User is not found!!!" });
-        }
+        res.status(200).json({
+          status: 200,
+          message: "Data update successfully job post",
+          data: jobData,
+        });
       } else {
         return res
           .status(401)
@@ -513,15 +502,15 @@ module.exports = {
   },
 
   // DELETE User
-  async deleteUser(req, res) {
+  async deleteJob(req, res) {
     try {
-      const { user_id } = req.query;
-      if (validator.isEmpty(user_id.toString())) {
+      const { job_id } = req.query;
+      if (validator.isEmpty(job_id.toString())) {
         return res.status(400).send({ message: "Please provide all fields" });
       }
-      await prisma.user_account.delete({
+      await prisma.job.delete({
         where: {
-          user_id: Number(user_id),
+          job_id: Number(job_id),
         },
       });
       res.status(200).json({

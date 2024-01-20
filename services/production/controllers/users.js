@@ -20,22 +20,56 @@ module.exports = {
   // GET SINGLE User data without token
   async getUser(req, res) {
     try {
-      const { user_id } = req.query;
-      if (validator.isEmpty(user_id.toString()) || !user_id)
-        return res.status(400).send({ message: "Please provide all fields " });
-      const user = await prisma.user_account.findUnique({
-        where: {
-          user_id: Number(user_id),
-        },
-        include: {
-          freelancer: true,
-          client: true,
-        },
-      });
-      res.status(200).json({
-        status: 200,
-        data: user,
-      });
+      const { id, userType } = req.query;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(id.toString()) || validator.isEmpty(userType))
+          return res
+            .status(400)
+            .send({ message: "Please provide all fields " });
+        // const user = await prisma.user_account.findFirst({
+        //   where: {
+        //     user_id: Number(user_id),
+        //   },
+        // });
+        // res.status(200).json({
+        //   status: 200,
+        //   data: user,
+        // });
+        if (userType === "freelancer") {
+          const user = await prisma.freelancer.findFirst({
+            where: {
+              freelancer_id: Number(id),
+            },
+            include: {
+              user_account: true,
+            },
+          });
+          res.status(200).json({
+            status: 200,
+            data: user,
+          });
+        } else if (userType === "client") {
+          const user = await prisma.client.findFirst({
+            where: {
+              client_id: Number(id),
+            },
+            include: {
+              user_account: true,
+            },
+          });
+          res.status(200).json({
+            status: 200,
+            data: user,
+          });
+        }
+      } else { 
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
@@ -60,9 +94,12 @@ module.exports = {
         },
       });
       if (!userFound) {
-        return res.status(404).send({status: 404, message: "User not found or Incorrect email or password!" });
+        return res.status(404).send({
+          status: 404,
+          message: "User not found or Incorrect email or password!",
+        });
       }
-      
+
       if (userFound.role.name == "freelancer") {
         const freelancerUser = await prisma.freelancer.findFirst({
           where: {
@@ -211,13 +248,13 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              }
+              },
             });
 
             await prisma.user_account.update({
               where: { user_id: existsUser.user_id },
               data: {
-                image, // assuming 'image' is the Base64-encoded image string
+                image,
               },
             });
 
@@ -241,7 +278,7 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              }
+              },
             });
 
             await prisma.user_account.update({
@@ -262,6 +299,33 @@ module.exports = {
             .status(404)
             .send({ status: 404, message: " User is not found!!!" });
         }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+  // GET all skills
+  async getSkills(req, res) {
+    try {
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+
+        const skills = await prisma.skill_category.findMany({
+          select: {
+            skill_id: true,
+            skill_name: true,
+          },
+        });
+        return res.status(200).json({
+          status: 200,
+          data: skills,
+        });
       } else {
         return res
           .status(401)

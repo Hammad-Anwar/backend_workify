@@ -14,12 +14,16 @@ router.post("/addSkills", (req, res) => users.addSkills(req, res));
 router.put("/user", (req, res) => users.updateUser(req, res));
 router.put("/updatePassword", (req, res) => users.updatePassword(req, res));
 router.delete("/user", (req, res) => users.deleteUser(req, res));
+router.get("/skills", (req, res) => users.getSkills(req, res));
 
 
-router.get("/users", (req, res) => post.getJobs(req, res));
+router.get("/jobs", (req, res) => post.getJobs(req, res));
 router.get("/clientJobs", (req, res) => post.getJobUsingClient(req, res));
 router.get("/freelancerJobs", (req, res) => post.getJobUsingFreelancer(req, res));
 router.get("/skillsJobs", (req, res) => post.getJobUsingSkills(req, res));
+router.post("/job", (req, res) => post.addJob(req, res));
+router.put("/job", (req, res) => post.updateJob(req, res));
+router.delete("/job", (req, res) => post.deleteJob(req, res));
 
 
 
