@@ -17,7 +17,7 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-  // GET SINGLE User data without token
+  // GET SINGLE User data
   async getUser(req, res) {
     try {
       const { id, userType } = req.query;
@@ -65,7 +65,7 @@ module.exports = {
             data: user,
           });
         }
-      } else { 
+      } else {
         return res
           .status(401)
           .send({ status: 401, data: "Please provide a valid auth token" });
@@ -132,6 +132,51 @@ module.exports = {
       return res.status(500).json({ status: 500, message: "Invalid role" });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  //
+  async getUserMe(req, res) {
+    const token = req.header("Authorization");
+
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const decoded = verifyToken(token.split(" ")[1]);
+
+      const user = await prisma.user_account.findUnique({
+        where: {
+          user_id: decoded.user_id,
+        },
+        include: {
+          role: true,
+          freelancer: true,
+          client: true,
+        },
+      });
+
+      if (user) {
+        if (user.role.name === "freelancer") {
+          return res.status(200).json({
+            status: 200,
+            data: generateToken(user.freelancer),
+            message: "Freelancer",
+          });
+        } else if (user.role.name === "client") {
+          return res.status(200).json({
+            status: 200,
+            data: generateToken(user.client),
+            message: "Client",
+          });
+        }
+
+        return res.status(500).json({ status: 500, message: "Invalid role" });
+      } else {
+        res.status(401).json({ error: "Invalid token" });
+      }
+    } catch (error) {
+      res.status(401).json({ error: "Invalid token" });
     }
   },
 
@@ -383,12 +428,17 @@ module.exports = {
   // PUT Update both users info
   async updateUser(req, res) {
     try {
-      const { user_id, image, userData } = req.body;
+      const { user_id, image, first_name, last_name, userData } = req.body;
       let token = req.headers["authorization"];
 
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(user_id.toString()) || validator.isEmpty(image)) {
+        if (
+          validator.isEmpty(user_id.toString()) ||
+          validator.isEmpty(image) ||
+          validator.isEmpty(first_name) ||
+          validator.isEmpty(last_name)
+        ) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
 
@@ -432,7 +482,9 @@ module.exports = {
             await prisma.user_account.update({
               where: { user_id: existsUser.user_id },
               data: {
-                image, // assuming 'image' is the Base64-encoded image string
+                first_name,
+                last_name,
+                image,
               },
             });
 
@@ -463,7 +515,9 @@ module.exports = {
             await prisma.user_account.update({
               where: { user_id: existsUser.user_id },
               data: {
-                image, // assuming 'image' is the Base64-encoded image string
+                first_name,
+                last_name,
+                image,
               },
             });
 

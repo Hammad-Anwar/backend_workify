@@ -21,27 +21,34 @@ module.exports = {
   async getUser(req, res) {
     try {
       const { user_id } = req.query;
-      if (validator.isEmpty(user_id.toString()) || !user_id)
-        return res.status(400).send({ message: "Please provide all fields " });
-      const user = await prisma.user_account.findUnique({
-        where: {
-          user_id: Number(user_id),
-        },
-        include: {
-          freelancer: true,
-          client: true,
-        },
-      });
-      res.status(200).json({
-        status: 200,
-        data: user,
-      });
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(user_id.toString()) || !user_id)
+          return res
+            .status(400)
+            .send({ message: "Please provide all fields " });
+        const user = await prisma.user_account.findUnique({
+          where: {
+            user_id: Number(user_id),
+          },
+          include: {
+            freelancer: true,
+            client: true,
+          },
+        });
+        res.status(200).json({
+          status: 200,
+          data: user,
+        });
+      } else {
+        return resUser
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-
-  
 
   // ADD USER POST
   async addUser(req, res) {
@@ -89,7 +96,7 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              }
+              },
             });
 
             await prisma.user_account.update({
@@ -119,7 +126,7 @@ module.exports = {
               },
               include: {
                 user_account: true,
-              }
+              },
             });
 
             await prisma.user_account.update({
@@ -302,7 +309,6 @@ module.exports = {
     }
   },
 
- 
   // DELETE User
   async deleteUser(req, res) {
     try {

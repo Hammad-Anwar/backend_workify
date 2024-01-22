@@ -18,6 +18,32 @@ module.exports = {
     }
   },
 
+  // GET Job By Id
+  async getJobById(req, res) {
+    try {
+      const { job_id } = req.query;
+      if (validator.isEmpty(job_id.toString())) {
+        return res.status(400).send({ message: "Please provide all fields" });
+      }
+      const data = await prisma.job.findUnique({
+        where: {
+          job_id: Number(job_id),
+        },
+        include: {
+          payment: true,
+          feature_job: true
+        }
+      });
+      res.status(200).json({
+        status: 200,
+        message: "Get Data Succesfully",
+        data,
+      });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
   // GET Job's data with client id
   async getJobUsingClient(req, res) {
     try {
@@ -35,6 +61,7 @@ module.exports = {
             client_id: Number(client_id),
           },
           select: {
+            job_id: true,
             job_description: true,
             duration: true,
             image: true,
@@ -112,6 +139,7 @@ module.exports = {
             freelancer_id: Number(freelancer_id),
           },
           select: {
+            job_id: true,
             job_description: true,
             duration: true,
             image: true,
@@ -426,7 +454,7 @@ module.exports = {
     }
   },
 
-  // PUT Update both users info
+  // PUT Update Job info
   async updateJob(req, res) {
     try {
       const {
@@ -501,7 +529,7 @@ module.exports = {
     }
   },
 
-  // DELETE User
+  // DELETE Job
   async deleteJob(req, res) {
     try {
       const { job_id } = req.query;
@@ -514,6 +542,7 @@ module.exports = {
         },
       });
       res.status(200).json({
+        status: 200,
         message: "Data Delete Successfully",
       });
     } catch (e) {
