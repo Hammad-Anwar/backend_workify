@@ -28,6 +28,7 @@ model client {
   message        message[]
   proposal       proposal[]
   review         review[]
+  chatroom       chatroom[]
 }
 
 model contract {
@@ -53,7 +54,7 @@ model contract {
 
 model feature_job {
   feature_id Int      @id @default(autoincrement())
-  status     Boolean?  @db.Boolean
+  status     Boolean? @db.Boolean
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   job        job[]
@@ -77,6 +78,7 @@ model freelancer {
   message        message[]
   proposal       proposal[]
   review         review[]
+  chatroom       chatroom[]
 }
 
 model has_skill {
@@ -105,28 +107,55 @@ model job {
   payment          payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
   skill_category   skill_category?  @relation(fields: [skillcategory_id], references: [skill_id], onDelete: Cascade)
   job_attachment   job_attachment[]
-  message          message[]
+  chatroom         chatroom[]
   other_category   other_category[]
   proposal         proposal[]
   task             task[]
 }
 
-model message {
-  message_id         Int              @id @default(autoincrement())
-  freelancer_id      Int?
-  client_id          Int?
-  job_id             Int?
-  date_time          DateTime?        @db.Timestamp(6)
-  msg_text           String?          @db.VarChar
-  proposal_id        Int?
-  proposal_status_id Int?
-  attachment         attachment[]
-  client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-  freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
-  job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
-  proposal           proposal?        @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
-  proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
+model chatroom {
+  chatroom_id   Int         @id @default(autoincrement())
+  freelancer_id Int?
+  client_id     Int?
+  job_id        Int?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  client        client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer    freelancer? @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  job           job?        @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  message       message[]
 }
+
+model message {
+  message_id          Int              @id @default(autoincrement())
+  freelancer_id       Int?
+  client_id           Int?
+  chatroom_id         Int?
+  msg_text            String?          @db.VarChar
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  client              client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  freelancer          freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  chatroom            chatroom?        @relation(fields: [chatroom_id], references: [chatroom_id], onDelete: Cascade)
+  attachment          attachment[]
+}
+
+// model message {
+//   message_id         Int              @id @default(autoincrement())
+//   freelancer_id      Int?
+//   client_id          Int?
+//   job_id             Int?
+//   date_time          DateTime?        @db.Timestamp(6)
+//   msg_text           String?          @db.VarChar
+//   proposal_id        Int?
+//   proposal_status_id Int?
+//   attachment         attachment[]
+//   client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+//   freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+//   job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+//   proposal           proposal?        @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+//   proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
+// }
 
 model other_category {
   id               Int             @id @default(autoincrement())
@@ -156,7 +185,7 @@ model proposal {
   client_comment     String?          @db.VarChar
   freelancer_comment String?          @db.VarChar
   contract           contract[]
-  message            message[]
+  // message            message[]
   client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
   freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
   job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
@@ -167,7 +196,7 @@ model proposal {
 model proposal_status {
   id       Int        @id @default(autoincrement())
   status   String?    @db.VarChar
-  message  message[]
+  // message  message[]
   proposal proposal[]
 }
 

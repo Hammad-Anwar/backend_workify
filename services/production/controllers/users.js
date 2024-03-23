@@ -9,7 +9,11 @@ module.exports = {
   // GET User account table data
   async getUsers(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({});
+      const user_accounts = await prisma.user_account.findMany({
+        include: {
+          role: true,
+        },
+      });
       res.status(200).json({
         data: user_accounts,
       });
@@ -127,6 +131,12 @@ module.exports = {
           status: 200,
           data: generateToken(clientUser),
           message: "Client",
+        });
+      } else if (userFound.role.name == "admin") {
+        return res.status(200).send({
+          status: 200,
+          data: generateToken(userFound),
+          message: "Admin",
         });
       }
       return res.status(500).json({ status: 500, message: "Invalid role" });

@@ -31,14 +31,90 @@ module.exports = {
         },
         include: {
           payment: true,
-          feature_job: true
-        }
+          feature_job: true,
+        },
       });
       res.status(200).json({
         status: 200,
         message: "Get Data Succesfully",
         data,
       });
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // GET Featured Post By status
+  async getFeaturedPosts(req, res) {
+    try {
+      const { status } = req.body;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(status.toString())) {
+          return res.status(400).send({ message: "Please provide all fields" });
+        }
+        const data = await prisma.feature_job.findMany({
+          where: {
+            status: Boolean(status),
+          },
+          include: {
+            job: {
+              select: {
+                job_id: true,
+                job_description: true,
+                duration: true,
+                image: true,
+                updated_at: true,
+                skill_category: {
+                  select: {
+                    skill_name: true,
+                  },
+                },
+                freelancer: {
+                  select: {
+                    freelancer_id: true,
+                    user_account: {
+                      select: {
+                        first_name: true,
+                        last_name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+                client: {
+                  select: {
+                    client_id: true,
+                    user_account: {
+                      select: {
+                        first_name: true,
+                        last_name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+                payment: {
+                  select: {
+                    payment_amount: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+        res.status(200).json({
+          status: 200,
+          message: "Get Data Succesfully",
+          data,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
