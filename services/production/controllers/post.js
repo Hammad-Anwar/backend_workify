@@ -59,7 +59,9 @@ module.exports = {
           where: {
             status: Boolean(status),
           },
-          include: {
+          select: {
+            feature_id: true,
+            status: true,
             job: {
               select: {
                 job_id: true,
@@ -104,11 +106,37 @@ module.exports = {
               },
             },
           },
+          orderBy: {
+            feature_id: "asc",
+          },
         });
+        const transformedData = data.map((item) => ({
+          feature_id: item.feature_id,
+          status: item.status,
+          job: {
+            ...item.job[0],
+            skill_name: item.job[0]?.skill_category?.skill_name,
+            skill_category: undefined,
+            payment_amount: item.job[0]?.payment?.payment_amount,
+            payment: undefined,
+            freelancer: {
+              freelancer_id: item.job[0]?.freelancer?.freelancer_id,
+              first_name: item.job[0]?.freelancer?.user_account?.first_name,
+              last_name: item.job[0]?.freelancer?.user_account?.last_name,
+              image: item.job[0]?.freelancer?.user_account?.image,
+            },
+            client: {
+              client_id: item.job[0]?.client?.client_id,
+              first_name: item.job[0]?.client?.user_account?.first_name,
+              last_name: item.job[0]?.client?.user_account?.last_name,
+              image: item.job[0]?.client?.user_account?.image,
+            },
+          },
+        }));
         res.status(200).json({
           status: 200,
           message: "Get Data Succesfully",
-          data,
+          transformedData,
         });
       } else {
         return res

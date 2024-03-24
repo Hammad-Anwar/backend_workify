@@ -32,6 +32,7 @@ exports = module.exports = function (io) {
 		});
 
 		socket.on("join-room", async (data) => {
+			console.log("working join-room")
 			const { userId1, userId2 } = data;
 			
 			// Find the chatroom
@@ -52,14 +53,15 @@ exports = module.exports = function (io) {
 		// body will be filename with extension (client will receive file name as response after uploading it)
 		socket.on("send-message", async (data) => {
 			// const { user, chatroom_id, msg_text, isFile, isImage } = data;
+			console.log("working send-message")
 			const { user, chatroom_id, msg_text } = data;
-
+ 
 			// Create a new message
 			const newMessage = await prisma.message.create({
-				data: {
+				data: { 
 					freelancer_id: user,
 					client_id: user,
-					chatroom_id: chatroom_id,
+					chatroom_id: chatroom_id, 
 					msg_text: msg_text
 				}
 			});
@@ -79,11 +81,12 @@ exports = module.exports = function (io) {
 
 			// if (deviceToken) fcm.sendNotification(message, [deviceToken]);
 
-			socket.to(chatroom.toString()).emit('message', newMessage);
+			socket.to(chatroom_id.toString()).emit('message', newMessage);
 		});
 
-		socket.on("typing", async (chatroom) => {
-			socket.to(chatroom.toString()).emit('typing', "typing");
+		socket.on("typing", async (chatroom_id) => {
+			console.log("working typing")
+			socket.to(chatroom_id.toString()).emit('typing', "typing");
 		});
 	});
 }
