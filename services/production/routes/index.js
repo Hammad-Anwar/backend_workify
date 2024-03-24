@@ -34,6 +34,9 @@ router.delete("/job", (req, res) => post.deleteJob(req, res));
 
 // Chat cotroller Routes 
 router.get("/chatrooms", (req, res) => chat.getChatrooms(req, res))
+router.post("/chatrooms", (req, res) => chat.addChatroom(req, res))
+router.post("/userChatrooms", (req, res) => chat.addUserChatroom(req, res))
+router.post("/messages", (req, res) => chat.addMessage(req, res))
 router.get("/messages", (req, res) => chat.getMessages(req, res))
 
 

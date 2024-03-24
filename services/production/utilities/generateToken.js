@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (user) => ({
-  token: 'Bearer ' + jwt.sign({ id: user.id,role:user.role_id },
+  token: 'Bearer ' + jwt.sign({ id: user.useraccount_id,role:user.user_account.role_id },
    "secret"),user
   });
