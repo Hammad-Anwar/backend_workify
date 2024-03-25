@@ -153,40 +153,64 @@ module.exports = {
       return res.status(401).json({ error: "Unauthorized" });
     }
     try {
-      const decoded = verifyToken(token.split(" ")[1]);
+      const decoded = await verifyToken(token.split(" ")[1]);
+      const userId = decoded.user.id;
+      console.log(userId);
 
-      const user = await prisma.user_account.findUnique({
+      const userFound = await prisma.user_account.findUnique({
         where: {
-          user_id: decoded.user_id,
+          user_id: Number(userId),
         },
         include: {
           role: true,
-          freelancer: true,
-          client: true,
-        },
-      });
-
-      if (user) {
-        if (user.role.name === "freelancer") {
-          return res.status(200).json({
-            status: 200,
-            data: generateToken(user.freelancer),
-            message: "Freelancer",
-          });
-        } else if (user.role.name === "client") {
-          return res.status(200).json({
-            status: 200,
-            data: generateToken(user.client),
-            message: "Client",
-          });
         }
-
-        return res.status(500).json({ status: 500, message: "Invalid role" });
-      } else {
-        res.status(401).json({ error: "Invalid token" });
+      });
+      if (!userFound) {
+        return res.status(404).send({
+          status: 404,
+          message: "User not found or Incorrect email or password!",
+        });
       }
+
+      if (userFound.role.name == "freelancer") {
+        const freelancerUser = await prisma.freelancer.findFirst({
+          where: {
+            useraccount_id: userFound.user_id,
+          },
+          include: {
+            user_account: true,
+          },
+        });
+        console.log(freelancerUser);
+        return res.status(200).send({
+          status: 200,
+          data: generateToken(freelancerUser),
+          message: "Freelancer",
+        });
+      } else if (userFound.role.name == "client") {
+        const clientUser = await prisma.client.findFirst({
+          where: {
+            useraccount_id: userFound.user_id,
+          },
+          include: {
+            user_account: true,
+          },
+        });
+        return res.status(200).send({
+          status: 200,
+          data: generateToken(clientUser),
+          message: "Client",
+        });
+      } else if (userFound.role.name == "admin") {
+        return res.status(200).send({
+          status: 200,
+          data: generateToken(userFound),
+          message: "Admin",
+        });
+      }
+      return res.status(400).json({ status: 400, message: "Invalid role" });
     } catch (error) {
-      res.status(401).json({ error: "Invalid token" });
+      res.status(500).json({ error: error.message });
     }
   },
 
