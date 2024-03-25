@@ -3,90 +3,136 @@ const prisma = new PrismaClient();
 // const fcm = require('../helpers/fcm');
 
 exports = module.exports = function (io) {
-	io.sockets.on('connection', function (socket) {
-        console.log("Connected")
-		socket.on("join-room_and_send-message", async (data) => {
-			console.log(data)
-			const { client_id, freelancer_id, msg_text, job_id } = data;
-			// Create a new chatroom
-			const newChatroom = await prisma.chatroom.create({
-				data: {
-					client_id: client_id,
-					freelancer_id: freelancer_id,
-					job_id: job_id
-				}
-			});
+  io.sockets.on("connection", function (socket) {
+    console.log("Connected");
+    socket.on("join-room_and_send-message", async (data) => {
+      console.log(data);
+      const { userId1, userId2, msg_text, job_id } = data;
 
-			// Create a new message
-			const newMessage = await prisma.message.create({
-				data: {
-					freelancer_id: freelancer_id,
-					client_id: client_id,
-					chatroom_id: newChatroom.chatroom_id,
-					msg_text: msg_text
-				}
-			});
+      // Check if a chatroom between the two users already exists
+      let chatroom = await prisma.chatroom.findFirst({
+        where: {
+          AND: [
+            { user_chatroom: { some: { useraccount_id: userId1 } } },
+            { user_chatroom: { some: { useraccount_id: userId2 } } },
+          ],
+        },
+      });
 
-			socket.join(newChatroom.chatroom_id.toString());
-			socket.to(newChatroom.chatroom_id.toString()).emit('message', newMessage);
-		});
+      if (!chatroom) {
+        // Create a new chatroom
+        chatroom = await prisma.chatroom.create({
+          data: {
+            job_id: job_id,
+          },
+        });
 
-		socket.on("join-room", async (data) => {
-			console.log("working join-room")
-			const { userId1, userId2 } = data;
-			
-			// Find the chatroom
-			const chatroom = await prisma.chatroom.findFirst({
-				where: {
-					AND: [
-						{ client_id: userId1 },
-						{ freelancer_id: userId2 }
-					]
-				}
-			});
+        // Create user_chatroom records
+        await prisma.user_chatroom.createMany({
+          data: [
+            {
+              useraccount_id: userId1,
+              chatroom_id: chatroom.chatroom_id,
+            },
+            {
+              useraccount_id: userId2,
+              chatroom_id: chatroom.chatroom_id,
+            },
+          ],
+        });
+      }
 
-			if (chatroom) {
-				socket.join(chatroom.chatroom_id.toString());
-			}
-		});
+      // Create a new message
+      const newMessage = await prisma.message.create({
+        data: {
+          useraccount_id: userId1,
+          chatroom_id: chatroom.chatroom_id,
+          msg_text: msg_text,
+        },
+      });
 
-		// body will be filename with extension (client will receive file name as response after uploading it)
-		socket.on("send-message", async (data) => {
-			// const { user, chatroom_id, msg_text, isFile, isImage } = data;
-			console.log("working send-message")
-			const { user, chatroom_id, msg_text } = data;
- 
-			// Create a new message
-			const newMessage = await prisma.message.create({
-				data: { 
-					freelancer_id: user,
-					client_id: user,
-					chatroom_id: chatroom_id, 
-					msg_text: msg_text
-				}
-			});
+      // Emit the message to both users in the chatroom
+      io.emit("message", newMessage);
+    });
 
-			// Find the chatroom for push notification
-			const chatroomForPushNot = await prisma.chatroom.findUnique({
-				where: {
-					chatroom_id: chatroom_id
-				},
-				include: {
-					client: true,
-					freelancer: true
-				}
-			});
+    socket.on("join-room", async (data) => {
+      console.log("working join-room");
+      const { userId1, userId2 } = data;
 
-			const deviceToken = chatroomForPushNot.client_id !== user ? chatroomForPushNot.client.deviceToken : chatroomForPushNot.freelancer.deviceToken;
+      // Find the chatroom
+      const chatroom = await prisma.chatroom.findFirst({
+        where: {
+          OR: [
+            {
+              AND: [
+                { user_chatroom: { some: { useraccount_id: userId1 } } },
+                { user_chatroom: { some: { useraccount_id: userId2 } } },
+              ],
+            },
+            {
+              AND: [
+                { user_chatroom: { some: { useraccount_id: userId2 } } },
+                { user_chatroom: { some: { useraccount_id: userId1 } } },
+              ],
+            },
+          ],
+        },
+      });
 
-			// if (deviceToken) fcm.sendNotification(message, [deviceToken]);
+      if (chatroom) {
+        socket.join(chatroom.chatroom_id);
+      }
+    });
 
-			socket.to(chatroom_id.toString()).emit('message', newMessage);
-		});
+    socket.on("send-message", async (data) => {
+      console.log("working send-message");
+      const { user, chatroom_id, msg_text } = data;
 
-		socket.on("typing", async (chatroom_id) => {
-			console.log("working typing")
-			socket.to(chatroom_id.toString()).emit('typing', "typing");
-		});
-	});
-}
+      // Create a new message
+      const newMessage = await prisma.message.create({
+        data: {
+          useraccount_id: user,
+          chatroom_id: Number(chatroom_id),
+          msg_text: msg_text,
+        },
+        include: {
+          user_account: true,
+        },
+      });
+    //   console.log("ds", typeof chatroom_id.toString());
+    //   console.log("ss", typeof String(chatroom_id));
+
+      //   const chatroomForPushNot = await prisma.chatroom.findUnique({
+      //     where: {
+      //       chatroom_id: chatroom_id,
+      //     },
+      //     include: {
+      //       user_chatroom: {
+      //         where: {
+      //           NOT: {
+      //             useraccount_id: user,
+      //           },
+      //         },
+      //         select: {
+      //           user_account: true,
+      //         },
+      //       },
+      //     },
+      //   });
+
+      //   const deviceToken =
+      //     chatroomForPushNot.user_chatroom[0].user_account.deviceToken;
+
+      // if (deviceToken) fcm.sendNotification(message, [deviceToken]);
+      io.emit("message", newMessage);
+    });
+
+    socket.on("typing", async () => {
+      console.log("working typing");
+      io.emit("typing", "typing");
+    });
+	socket.on("disconnect", () => {
+		socket.disconnect()
+	})
+  });
+};

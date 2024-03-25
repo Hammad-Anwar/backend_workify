@@ -47,7 +47,7 @@ module.exports = {
   // GET Featured Post By status
   async getFeaturedPosts(req, res) {
     try {
-      const { status } = req.body;
+      const { status } = req.query;
       let token = req.headers["authorization"];
 
       if (token) {
@@ -136,7 +136,7 @@ module.exports = {
         res.status(200).json({
           status: 200,
           message: "Get Data Succesfully",
-          transformedData,
+          data: transformedData,
         });
       } else {
         return res
