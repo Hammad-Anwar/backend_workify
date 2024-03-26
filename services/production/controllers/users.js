@@ -103,6 +103,7 @@ module.exports = {
           message: "User not found or Incorrect email or password!",
         });
       }
+      console.log(userFound)
 
       if (userFound.role.name == "freelancer") {
         const freelancerUser = await prisma.freelancer.findFirst({
