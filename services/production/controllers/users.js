@@ -415,6 +415,36 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
+// get skills by freelanceridi
+  async getSkillsByFreelancer(req, res) {
+    try {
+      const { freelancer_id } = req.query;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);;
+
+        const skills = await prisma.has_skill.findMany({
+          where: {
+            freelancer_id: Number(freelancer_id)
+          },
+          include: {
+            skill_category: true,
+          },
+        });
+        return res.status(200).json({
+          status: 200,
+          data: skills,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
   // POST Add skills for freelancer
   async addSkills(req, res) {
     try {

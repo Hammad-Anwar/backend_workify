@@ -107,6 +107,16 @@ model job {
   other_category   other_category[]
   proposal         proposal[]
   task             task[]
+  saved_post       saved_post[]
+}
+
+model saved_post {
+  id             Int           @id @default(autoincrement())
+  status         Boolean?
+  job_id         Int?
+  useraccount_id Int
+  user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+  job            job?          @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
 
 model chatroom {
@@ -247,6 +257,7 @@ model user_account {
   // chatroom      chatroom[]
   message       message[]
   user_chatroom user_chatroom[]
+  saved_post    saved_post[]
 }
 
 model role {

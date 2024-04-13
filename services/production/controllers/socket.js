@@ -49,10 +49,13 @@ exports = module.exports = function (io) {
           chatroom_id: chatroom.chatroom_id,
           msg_text: msg_text,
         },
+        include: {
+          user_account: true,
+        },
       });
 
       // Emit the message to both users in the chatroom
-      io.emit("message", newMessage);
+      io.emit("message", newMessage); 
     });
 
     socket.on("join-room", async (data) => {

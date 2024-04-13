@@ -4,6 +4,7 @@ const { json } = require("express/lib/response");
 const post = require("../controllers/post");
 const chat = require("../controllers/chat");
 const { Server } = require("socket.io");
+const savedPost = require("../controllers/savedPost");
 
 var router = express.Router();
 
@@ -19,6 +20,7 @@ router.put("/user", (req, res) => users.updateUser(req, res));
 router.put("/updatePassword", (req, res) => users.updatePassword(req, res));
 router.delete("/user", (req, res) => users.deleteUser(req, res));
 router.get("/skills", (req, res) => users.getSkills(req, res));
+router.get("/freelancerSkills", (req, res) => users.getSkillsByFreelancer(req, res));
 router.get("/usersMe", (req, res) => users.getUserMe(req, res));
 
 // POst Controller Routes
@@ -38,6 +40,13 @@ router.post("/chatrooms", (req, res) => chat.addChatroom(req, res))
 router.post("/userChatrooms", (req, res) => chat.addUserChatroom(req, res))
 router.post("/messages", (req, res) => chat.addMessage(req, res))
 router.get("/messages", (req, res) => chat.getMessages(req, res))
+
+router.get("/savedPosts", (req, res) => savedPost.getsavedPosts(req, res))
+router.get("/savedPostsByUserId", (req, res) => savedPost.getsavedPostsByUserId(req, res))
+router.route("/savedPost")
+  .put((req, res) => savedPost.savedPost(req, res))
+  .post((req, res) => savedPost.savedPost(req, res));
+
 
 
 

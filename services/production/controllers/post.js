@@ -175,6 +175,7 @@ module.exports = {
                 client_id: true,
                 user_account: {
                   select: {
+                    user_id: true,
                     first_name: true,
                     last_name: true,
                     image: true,
@@ -207,6 +208,7 @@ module.exports = {
           payment: undefined,
           feature_job: job.feature_job?.status,
 
+          user_id: job.client?.user_account?.user_id,
           first_name: job.client?.user_account?.first_name,
           last_name: job.client?.user_account?.last_name,
           profile_image: job.client?.user_account?.image,
@@ -253,6 +255,7 @@ module.exports = {
                 freelancer_id: true,
                 user_account: {
                   select: {
+                    user_id: true,
                     first_name: true,
                     last_name: true,
                     image: true,
@@ -285,7 +288,7 @@ module.exports = {
           payment: undefined,
           feature_job: job.feature_job?.status,
           // skill_category: undefined,
-
+          user_id: job.freelancer?.user_account?.user_id,
           first_name: job.freelancer?.user_account?.first_name,
           last_name: job.freelancer?.user_account?.last_name,
           profile_image: job.freelancer?.user_account?.image,
@@ -355,6 +358,7 @@ module.exports = {
                     freelancer_id: true,
                     user_account: {
                       select: {
+                        user_id: true,
                         first_name: true,
                         last_name: true,
                         image: true,
@@ -367,6 +371,7 @@ module.exports = {
                     client_id: true,
                     user_account: {
                       select: {
+                        user_id: true,
                         first_name: true,
                         last_name: true,
                         image: true,
@@ -387,11 +392,13 @@ module.exports = {
               skill_category: undefined,
 
               client: {
+                user_id: job.client?.user_account?.user_id,
                 first_name: job.client?.user_account?.first_name,
                 last_name: job.client?.user_account?.last_name,
                 image: job.client?.user_account?.image,
               },
               freelancer: {
+                user_id: job?.freelancer?.user_account?.user_id,
                 first_name: job.freelancer?.user_account?.first_name,
                 last_name: job.freelancer?.user_account?.last_name,
                 image: job.freelancer?.user_account?.image,
