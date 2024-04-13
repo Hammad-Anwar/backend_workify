@@ -49,6 +49,11 @@ module.exports = {
                     skill_name: true,
                   },
                 },
+                saved_post: {
+                  select: {
+                    status: true,
+                  },
+                },
                 freelancer: {
                   select: {
                     freelancer_id: true,
@@ -106,6 +111,9 @@ module.exports = {
               first_name: item.job?.client?.user_account?.first_name,
               last_name: item.job?.client?.user_account?.last_name,
               image: item.job?.client?.user_account?.image,
+            },
+            saved_post: {
+              savedPost_status: item.job?.saved_post[0]?.status,
             },
           },
         }));

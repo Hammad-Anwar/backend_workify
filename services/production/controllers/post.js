@@ -74,6 +74,11 @@ module.exports = {
                     skill_name: true,
                   },
                 },
+                saved_post: {
+                  select: {
+                    status: true,
+                  },
+                },
                 freelancer: {
                   select: {
                     freelancer_id: true,
@@ -119,6 +124,7 @@ module.exports = {
             skill_category: undefined,
             payment_amount: item.job[0]?.payment?.payment_amount,
             payment: undefined,
+
             freelancer: {
               freelancer_id: item.job[0]?.freelancer?.freelancer_id,
               first_name: item.job[0]?.freelancer?.user_account?.first_name,
@@ -130,6 +136,9 @@ module.exports = {
               first_name: item.job[0]?.client?.user_account?.first_name,
               last_name: item.job[0]?.client?.user_account?.last_name,
               image: item.job[0]?.client?.user_account?.image,
+            },
+            saved_post: {
+              savedPost_status: item.job[0]?.saved_post[0]?.status,
             },
           },
         }));
@@ -183,6 +192,11 @@ module.exports = {
                 },
               },
             },
+            saved_post: {
+              select: {
+                status: true,
+              },
+            },
             skill_category: {
               select: {
                 skill_name: true,
@@ -207,7 +221,9 @@ module.exports = {
           payment_amount: job.payment?.payment_amount,
           payment: undefined,
           feature_job: job.feature_job?.status,
-
+          saved_post: {
+            savedPost_status: job?.saved_post[0]?.status,
+          },
           user_id: job.client?.user_account?.user_id,
           first_name: job.client?.user_account?.first_name,
           last_name: job.client?.user_account?.last_name,
@@ -268,6 +284,11 @@ module.exports = {
                 skill_name: true,
               },
             },
+            saved_post: {
+              select: {
+                status: true,
+              },
+            },
             feature_job: {
               select: {
                 status: true,
@@ -287,6 +308,9 @@ module.exports = {
           payment_amount: job.payment?.payment_amount,
           payment: undefined,
           feature_job: job.feature_job?.status,
+          saved_post: {
+            savedPost_status: job?.saved_post[0]?.status,
+          },
           // skill_category: undefined,
           user_id: job.freelancer?.user_account?.user_id,
           first_name: job.freelancer?.user_account?.first_name,
@@ -353,6 +377,11 @@ module.exports = {
                     skill_name: true,
                   },
                 },
+                saved_post: {
+                  select: {
+                    status: true,
+                  },
+                },
                 freelancer: {
                   select: {
                     freelancer_id: true,
@@ -390,7 +419,9 @@ module.exports = {
               ...job,
               skill_name: job.skill_category.skill_name,
               skill_category: undefined,
-
+              saved_post: {
+                savedPost_status: job?.saved_post[0]?.status,
+              },
               client: {
                 user_id: job.client?.user_account?.user_id,
                 first_name: job.client?.user_account?.first_name,
