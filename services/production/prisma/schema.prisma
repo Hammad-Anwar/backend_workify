@@ -150,6 +150,30 @@ model message {
   attachment     attachment[]
 }
 
+model dispute {
+  dispute_id        Int                 @id @default(autoincrement())
+  useraccount_id    Int?
+  complain_title    String?             @db.VarChar
+  complain_msg      String?             @db.VarChar
+  complain_img      String?             @db.VarChar
+  status            String              @default("active")
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  user_account      user_account?       @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+  dispute_complains dispute_complains[]
+}
+
+model dispute_complains {
+  id             Int           @id @default(autoincrement())
+  dispute_id     Int
+  useraccount_id Int?
+  complain_msg   String?       @db.VarChar
+  dispute        dispute?      @relation(fields: [dispute_id], references: [dispute_id], onDelete: Cascade)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+}
+
 // model message {
 //   message_id         Int              @id @default(autoincrement())
 //   freelancer_id      Int?
@@ -240,24 +264,26 @@ model task {
 }
 
 model user_account {
-  user_id       Int             @id @default(autoincrement())
-  user_name     String          @unique(map: "user_name") @db.VarChar
-  email         String          @unique(map: "email") @db.VarChar
-  password      String          @db.VarChar
-  first_name    String?         @db.VarChar
-  last_name     String?         @db.VarChar
-  gender        String?         @db.VarChar
-  image         String?         @db.VarChar
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updatedAt
-  role_id       Int
-  role          role            @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  client        client[]
-  freelancer    freelancer[]
+  user_id           Int                 @id @default(autoincrement())
+  user_name         String              @unique(map: "user_name") @db.VarChar
+  email             String              @unique(map: "email") @db.VarChar
+  password          String              @db.VarChar
+  first_name        String?             @db.VarChar
+  last_name         String?             @db.VarChar
+  gender            String?             @db.VarChar
+  image             String?             @db.VarChar
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  role_id           Int
+  role              role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  client            client[]
+  freelancer        freelancer[]
   // chatroom      chatroom[]
-  message       message[]
-  user_chatroom user_chatroom[]
-  saved_post    saved_post[]
+  message           message[]
+  user_chatroom     user_chatroom[]
+  saved_post        saved_post[]
+  dispute           dispute[]
+  dispute_complains dispute_complains[]
 }
 
 model role {

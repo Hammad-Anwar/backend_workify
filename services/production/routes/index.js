@@ -5,6 +5,7 @@ const post = require("../controllers/post");
 const chat = require("../controllers/chat");
 const { Server } = require("socket.io");
 const savedPost = require("../controllers/savedPost");
+const dispute = require("../controllers/dispute");
 
 var router = express.Router();
 
@@ -41,13 +42,15 @@ router.post("/userChatrooms", (req, res) => chat.addUserChatroom(req, res))
 router.post("/messages", (req, res) => chat.addMessage(req, res))
 router.get("/messages", (req, res) => chat.getMessages(req, res))
 
+// Saved Posts Routes
 router.get("/savedPosts", (req, res) => savedPost.getsavedPosts(req, res))
 router.get("/savedPostsByUserId", (req, res) => savedPost.getsavedPostsByUserId(req, res))
 router.route("/savedPost")
-  .put((req, res) => savedPost.savedPost(req, res))
-  .post((req, res) => savedPost.savedPost(req, res));
+.put((req, res) => savedPost.savedPost(req, res))
+.post((req, res) => savedPost.savedPost(req, res));
 
-
+// Disputes Routes
+router.get("/disputes", (req, res) => dispute.getDisputes(req, res))
 
 
 
