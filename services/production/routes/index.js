@@ -51,6 +51,11 @@ router.route("/savedPost")
 
 // Disputes Routes
 router.get("/disputes", (req, res) => dispute.getDisputes(req, res))
+router.get("/activeDisputes", (req, res) => dispute.getActiveDispute(req, res))
+router.get("/closedDisputes", (req, res) => dispute.getClosedDispute(req, res))
+router.get("/disputeComplains", (req, res) => dispute.getDisputeComplains(req, res))
+router.post("/dispute", (req, res) => dispute.addDispute(req, res))
+router.post("/disputeComplain", (req, res) => dispute.addDisputeComplains(req, res))
 
 
 
