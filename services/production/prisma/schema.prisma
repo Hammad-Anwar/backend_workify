@@ -255,12 +255,13 @@ model skill_category {
 }
 
 model task {
-  task_id          Int     @id @default(autoincrement())
-  task_description String? @db.VarChar
+  task_id          Int      @id @default(autoincrement())
+  task_description String?  @db.VarChar
+  status           String   @default("none")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
   job_id           Int?
-  duration_id      Int?
-  // duration         duration? @relation(fields: [duration_id], references: [duration_id], onDelete: Cascade)
-  job              job?    @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  job              job?     @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
 
 model user_account {

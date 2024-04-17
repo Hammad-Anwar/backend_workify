@@ -49,7 +49,7 @@ module.exports = {
         data: {
           chatroom_id,
           useraccount_id,
-          msg_text
+          msg_text,
         },
       });
       res.status(200).json({
@@ -66,37 +66,61 @@ module.exports = {
       let authToken = req.headers["authorization"];
       if (authToken) {
         const tokenData = await verifyToken(authToken.split(" ")[1]);
-          const userId = tokenData.user.id;
-          console.log(userId);
+        const userId = tokenData.user.id;
 
-          const userChatrooms = await prisma.user_chatroom.findMany({
-            where: {
-              chatroom_id: {
-                in: await prisma.user_chatroom
-                  .findMany({
-                    where: {
-                      useraccount_id: Number(userId),
-                    },
-                    select: {
-                      chatroom_id: true,
-                    },
-                  })
-                  .then((res) => res.map((item) => item.chatroom_id)),
-              },
-              useraccount_id: {
-                not: Number(userId),
+        const userChatrooms = await prisma.user_chatroom.findMany({
+          where: {
+            chatroom_id: {
+              in: await prisma.user_chatroom
+                .findMany({
+                  where: {
+                    useraccount_id: Number(userId),
+                  },
+                  select: {
+                    chatroom_id: true,
+                  },
+                })
+                .then((res) => res.map((item) => item.chatroom_id)),
+            },
+            useraccount_id: {
+              not: Number(userId),
+            },
+          },
+          select: {
+            chatroom_id: true,
+            useraccount_id: true,
+            user_account: true,
+            chatroom: {
+              select: {
+                chatroom_id: true,
+                job_id: true,
+                created_at: true,
+                updated_at: true,
+                job: {
+                  select: {
+                    job_id: true,
+                    job_description: true,
+                    duration: true,
+                    image: true,
+                    created_at: true,
+                    updated_at: true,
+                    freelancer_id: true,
+                    client_id: true,
+                    task: true,
+                    skill_category: true,
+                    payment: true,
+                    feature_job: true
+                  },
+                },
               },
             },
-            include: {
-              user_account: true,
-              chatroom: true
-            },
-          });
+          },
+        });
 
-          res.status(200).json({
-            status: 200,
-            data: userChatrooms,
-          });
+        res.status(200).json({
+          status: 200,
+          data: userChatrooms,
+        });
       } else {
         return res
           .status(401)

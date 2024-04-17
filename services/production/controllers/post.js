@@ -212,6 +212,12 @@ module.exports = {
                 payment_amount: true,
               },
             },
+            task: {
+              select: {
+                task_description: true,
+                status: true,
+              },
+            },
           },
         });
         const modifiedPosts = post.map((job) => ({
@@ -297,6 +303,12 @@ module.exports = {
             payment: {
               select: {
                 payment_amount: true,
+              },
+            },
+            task: {
+              select: {
+                task_description: true,
+                status: true,
               },
             },
           },
@@ -413,6 +425,12 @@ module.exports = {
                     payment_amount: true,
                   },
                 },
+                task: {
+                  select: {
+                    task_description: true,
+                    status: true,
+                  },
+                },
               },
             });
             const modifiedJobs = jobs.map((job) => ({
@@ -461,7 +479,7 @@ module.exports = {
   // ADD USER POST
   async addJob(req, res) {
     try {
-      const { user_id, postData } = req.body;
+      const { user_id, postData, task_descriptions } = req.body;
       let token = req.headers["authorization"];
 
       if (token) {
@@ -469,7 +487,6 @@ module.exports = {
         if (validator.isEmpty(user_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
-
         const existsUser = await prisma.user_account.findUnique({
           where: { user_id: user_id },
           include: {
@@ -501,7 +518,6 @@ module.exports = {
                     freelancer_id: Number(freelancerId),
                   },
                 },
-
                 job_description,
                 duration,
                 image,
@@ -528,11 +544,51 @@ module.exports = {
                 feature_job: true,
               },
             });
-            res.status(200).json({
-              status: 200,
-              message: "Data added successfully in freelancer user",
-              data: freelancerPost,
-            });
+            if (
+              task_descriptions.length === 0 ||
+              task_descriptions.every((description) => description === "")
+            ) {
+              res.status(200).json({
+                status: 200,
+                message: "Data added successfully in freelancer user",
+                data: freelancerPost,
+              });
+            } else {
+              const job_id = Number(freelancerPost.job_id);
+              const tasks = await Promise.all(
+                task_descriptions.map((description) => {
+                  return prisma.task.create({
+                    data: {
+                      task_description: description,
+                      job: {
+                        connect: { job_id },
+                      },
+                    },
+                    select: {
+                      task_id: true,
+                      task_description: true,
+                      status: true,
+                      job_id: true,
+                      created_at: true,
+                      updated_at: true,
+                      job: {
+                        include: {
+                          freelancer: true,
+                          skill_category: true,
+                          payment: true,
+                          feature_job: true,
+                        },
+                      },
+                    },
+                  });
+                })
+              );
+              res.status(200).json({
+                status: 200,
+                message: "Data added successfully in freelancer user",
+                data: tasks,
+              });
+            }
           } else if (existsUser.role.name === "client") {
             const {
               job_description,
@@ -575,11 +631,51 @@ module.exports = {
                 feature_job: true,
               },
             });
-            res.status(200).json({
-              status: 200,
-              message: "Data added successfully in client user",
-              data: clientPost,
-            });
+            if (
+              task_descriptions.length === 0 ||
+              task_descriptions.every((description) => description === "")
+            ) {
+              res.status(200).json({
+                status: 200,
+                message: "Data added successfully in client user",
+                data: clientPost,
+              });
+            } else {
+              const job_id = Number(clientPost.job_id);
+              const tasks = await Promise.all(
+                task_descriptions.map((description) => {
+                  return prisma.task.create({
+                    data: {
+                      task_description: description,
+                      job: {
+                        connect: { job_id },
+                      },
+                    },
+                    select: {
+                      task_id: true,
+                      task_description: true,
+                      status: true,
+                      job_id: true,
+                      created_at: true,
+                      updated_at: true,
+                      job: {
+                        include: {
+                          client: true,
+                          skill_category: true,
+                          payment: true,
+                          feature_job: true,
+                        },
+                      },
+                    },
+                  });
+                })
+              );
+              res.status(200).json({
+                status: 200,
+                message: "Data added successfully in client user",
+                data: tasks,
+              });
+            }
           }
         } else {
           return res
