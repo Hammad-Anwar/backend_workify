@@ -158,6 +158,194 @@ module.exports = {
   },
 
   // GET Job's data with client id
+  async getJobUsingUserId(req, res) {
+    try {
+      const { user_id } = req.query;
+      let token = req.headers["authorization"];
+
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(user_id.toString()) || !user_id)
+          return res
+            .status(400)
+            .send({ message: "Please provide all fields " });
+        const existsUser = await prisma.user_account.findUnique({
+          where: {
+            user_id: Number(user_id),
+          },
+          include: {
+            role: true,
+          },
+        });
+        if (existsUser) {
+          if (existsUser.role.name === "freelancer") {
+            const freelancer = await prisma.freelancer.findFirst({
+              where: {
+                useraccount_id: Number(user_id),
+              },
+            });
+            const post = await prisma.job.findMany({
+              where: {
+                freelancer_id: Number(freelancer.freelancer_id),
+              },
+              select: {
+                job_id: true,
+                job_description: true,
+                duration: true,
+                image: true,
+                updated_at: true,
+                client: {
+                  select: {
+                    client_id: true,
+                    user_account: {
+                      select: {
+                        user_id: true,
+                        first_name: true,
+                        last_name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+                saved_post: {
+                  select: {
+                    status: true,
+                  },
+                },
+                skill_category: {
+                  select: {
+                    skill_name: true,
+                  },
+                },
+                feature_job: {
+                  select: {
+                    status: true,
+                  },
+                },
+                payment: {
+                  select: {
+                    payment_amount: true,
+                  },
+                },
+                task: {
+                  select: {
+                    task_description: true,
+                    status: true,
+                  },
+                },
+              },
+            });
+            const modifiedPosts = post.map((job) => ({
+              ...job,
+              skill_name: job.skill_category.skill_name,
+              skill_category: undefined,
+              payment_amount: job.payment?.payment_amount,
+              payment: undefined,
+              feature_job: job.feature_job?.status,
+              saved_post: {
+                savedPost_status: job?.saved_post[0]?.status,
+              },
+              user_id: job.client?.user_account?.user_id,
+              first_name: job.client?.user_account?.first_name,
+              last_name: job.client?.user_account?.last_name,
+              profile_image: job.client?.user_account?.image,
+              client: undefined,
+            }));
+            res.status(200).json({
+              status: 200,
+              data: modifiedPosts,
+            });
+          } else if (existsUser.role.name === "client") {
+            const client = await prisma.client.findFirst({
+              where: {
+                useraccount_id: Number(user_id),
+              },
+            });
+            const post = await prisma.job.findMany({
+              where: {
+                client_id: Number(client.client_id),
+              },
+              select: {
+                job_id: true,
+                job_description: true,
+                duration: true,
+                image: true,
+                updated_at: true,
+                client: {
+                  select: {
+                    client_id: true,
+                    user_account: {
+                      select: {
+                        user_id: true,
+                        first_name: true,
+                        last_name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+                saved_post: {
+                  select: {
+                    status: true,
+                  },
+                },
+                skill_category: {
+                  select: {
+                    skill_name: true,
+                  },
+                },
+                feature_job: {
+                  select: {
+                    status: true,
+                  },
+                },
+                payment: {
+                  select: {
+                    payment_amount: true,
+                  },
+                },
+                task: {
+                  select: {
+                    task_id: true,
+                    task_description: true,
+                    status: true,
+                  },
+                },
+              },
+            });
+            const modifiedPosts = post.map((job) => ({
+              ...job,
+              skill_name: job.skill_category.skill_name,
+              skill_category: undefined,
+              payment_amount: job.payment?.payment_amount,
+              payment: undefined,
+              feature_job: job.feature_job?.status,
+              saved_post: {
+                savedPost_status: job?.saved_post[0]?.status,
+              },
+              user_id: job.client?.user_account?.user_id,
+              first_name: job.client?.user_account?.first_name,
+              last_name: job.client?.user_account?.last_name,
+              profile_image: job.client?.user_account?.image,
+              client: undefined,
+            }));
+            res.status(200).json({
+              status: 200,
+              data: modifiedPosts,
+            });
+          }
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // GET Job's data with client id
   async getJobUsingClient(req, res) {
     try {
       const { client_id } = req.query;

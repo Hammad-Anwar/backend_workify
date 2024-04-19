@@ -6,6 +6,7 @@ const chat = require("../controllers/chat");
 const { Server } = require("socket.io");
 const savedPost = require("../controllers/savedPost");
 const dispute = require("../controllers/dispute");
+const proposal = require("../controllers/proposal");
 
 var router = express.Router();
 
@@ -30,6 +31,7 @@ router.get("/job", (req, res) => post.getJobById(req, res));
 router.get("/featuredJobs", (req, res) => post.getFeaturedPosts(req, res));
 router.get("/clientJobs", (req, res) => post.getJobUsingClient(req, res));
 router.get("/freelancerJobs", (req, res) => post.getJobUsingFreelancer(req, res));
+router.get("/userJobs", (req, res) => post.getJobUsingUserId(req, res));
 router.get("/skillsJobs", (req, res) => post.getJobUsingSkills(req, res));
 router.post("/job", (req, res) => post.addJob(req, res));
 router.put("/job", (req, res) => post.updateJob(req, res));
@@ -56,6 +58,13 @@ router.get("/closedDisputes", (req, res) => dispute.getClosedDispute(req, res))
 router.get("/disputeComplains", (req, res) => dispute.getDisputeComplains(req, res))
 router.post("/dispute", (req, res) => dispute.addDispute(req, res))
 router.post("/disputeComplain", (req, res) => dispute.addDisputeComplains(req, res))
+
+// Disputes Routes
+router.get("/proposals", (req, res) => proposal.getProposals(req, res))
+router.post("/proposals", (req, res) => proposal.addProposal(req, res))
+router.get("/proposalsByUser", (req, res) => proposal.getProposalByUserId(req, res))
+router.get("/proposalsByJob", (req, res) => proposal.getProposalByJobId(req, res))
+router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
 
 
 

@@ -23,32 +23,18 @@ model client {
   location       String?       @db.VarChar
   overview       String?       @db.VarChar
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
-  contract       contract[]
   job            job[]
-  proposal       proposal[]
   review         review[]
 }
 
 model contract {
-  contract_id   Int         @id @default(autoincrement())
-  freelancer_id Int?
-  client_id     Int?
-  proposal_id   Int?
-  start_time    DateTime?   @db.Time(6)
-  end_time      DateTime?   @db.Time(6)
-  payment_id    Int?
-  client        client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-  freelancer    freelancer? @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
-  payment       payment?    @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
-  proposal      proposal?   @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+  contract_id     Int       @id @default(autoincrement())
+  proposal_id     Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  contract_status String    @default("working")
+  proposal        proposal? @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
 }
-
-// model duration {
-//   duration_id Int     @id @default(autoincrement())
-//   text_column String? @db.VarChar
-//   job         job[]
-//   task        task[]
-// }
 
 model feature_job {
   feature_id Int      @id @default(autoincrement())
@@ -69,11 +55,9 @@ model freelancer {
   description    String?       @db.VarChar
   links          String?       @db.VarChar
   location       String?       @db.VarChar
-  contract       contract[]
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
   has_skill      has_skill[]
   job            job[]
-  proposal       proposal[]
   review         review[]
 }
 
@@ -100,6 +84,7 @@ model job {
   client           client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
   feature_job      feature_job?     @relation(fields: [feature_id], references: [feature_id], onDelete: Cascade)
   freelancer       freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  // Fix payment it is temporary 
   payment          payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
   skill_category   skill_category?  @relation(fields: [skillcategory_id], references: [skill_id], onDelete: Cascade)
   job_attachment   job_attachment[]
@@ -174,23 +159,6 @@ model dispute_complains {
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
 }
 
-// model message {
-//   message_id         Int              @id @default(autoincrement())
-//   freelancer_id      Int?
-//   client_id          Int?
-//   job_id             Int?
-//   date_time          DateTime?        @db.Timestamp(6)
-//   msg_text           String?          @db.VarChar
-//   proposal_id        Int?
-//   proposal_status_id Int?
-//   attachment         attachment[]
-//   client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-//   freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
-//   job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
-//   proposal           proposal?        @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
-//   proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
-// }
-
 model other_category {
   id               Int             @id @default(autoincrement())
   job_id           Int?
@@ -203,35 +171,34 @@ model payment {
   payment_id     Int        @id @default(autoincrement())
   type_name      String?    @db.VarChar
   payment_amount Decimal?   @db.Decimal(10, 2)
-  contract       contract[]
   job            job[]
   proposal       proposal[]
 }
 
 model proposal {
-  proposal_id        Int              @id @default(autoincrement())
-  freelancer_id      Int?
-  client_id          Int?
-  job_id             Int?
-  proposal_time      DateTime?        @db.Time(6)
-  payment_id         Int?
-  proposal_status_id Int?
-  client_comment     String?          @db.VarChar
-  freelancer_comment String?          @db.VarChar
-  contract           contract[]
-  // message            message[]
-  client             client?          @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-  freelancer         freelancer?      @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
-  job                job?             @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
-  payment            payment?         @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
-  proposal_status    proposal_status? @relation(fields: [proposal_status_id], references: [id], onDelete: Cascade)
+  proposal_id       Int                 @id @default(autoincrement())
+  useraccount_id    Int?
+  job_id            Int?
+  payment_id        Int?
+  description       String?             @db.VarChar
+  revisions         Int?
+  duration          Int?
+  proposal_status   String              @default("waiting")
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  contract          contract[]
+  user_account      user_account?       @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
+  job               job?                @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  payment           payment?            @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
+  has_proposal_task has_proposal_task[]
 }
 
-model proposal_status {
-  id       Int        @id @default(autoincrement())
-  status   String?    @db.VarChar
-  // message  message[]
-  proposal proposal[]
+model has_proposal_task {
+  id          Int       @id @default(autoincrement())
+  task_id     Int?
+  proposal_id Int?
+  proposal    proposal? @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+  task        task?     @relation(fields: [task_id], references: [task_id], onDelete: Cascade)
 }
 
 model review {
@@ -255,13 +222,14 @@ model skill_category {
 }
 
 model task {
-  task_id          Int      @id @default(autoincrement())
-  task_description String?  @db.VarChar
-  status           String   @default("none")
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-  job_id           Int?
-  job              job?     @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  task_id           Int                 @id @default(autoincrement())
+  task_description  String?             @db.VarChar
+  status            String              @default("none")
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  job_id            Int?
+  job               job?                @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  has_proposal_task has_proposal_task[]
 }
 
 model user_account {
@@ -279,12 +247,12 @@ model user_account {
   role              role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
   client            client[]
   freelancer        freelancer[]
-  // chatroom      chatroom[]
   message           message[]
   user_chatroom     user_chatroom[]
   saved_post        saved_post[]
   dispute           dispute[]
   dispute_complains dispute_complains[]
+  proposal          proposal[]
 }
 
 model role {
