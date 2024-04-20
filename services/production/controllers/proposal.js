@@ -152,10 +152,18 @@ module.exports = {
               });
             })
           );
+          const taskData = await prisma.proposal.findFirst({
+            where: {
+              proposal_id: Number(tasks[0].proposal_id),
+            },
+            include: {
+              has_proposal_task: true,
+            },
+          });
           res.status(200).json({
             status: 200,
             message: "Proposal Send Successfully with selected Tasks",
-            data: tasks,
+            data: taskData,
           });
         }
       } else {
