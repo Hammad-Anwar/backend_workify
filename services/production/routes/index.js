@@ -63,7 +63,7 @@ router.post("/disputeComplain", (req, res) => dispute.addDisputeComplains(req, r
 router.get("/proposals", (req, res) => proposal.getProposals(req, res))
 router.post("/proposals", (req, res) => proposal.addProposal(req, res))
 router.get("/proposalsByUser", (req, res) => proposal.getProposalByUserId(req, res))
-router.get("/proposalsByJob", (req, res) => proposal.getProposalByJobId(req, res))
+router.get("/receivedProposals", (req, res) => proposal.getReceivedProposals(req, res))
 router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
 
 

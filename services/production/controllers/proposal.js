@@ -17,25 +17,97 @@ module.exports = {
     }
   },
   // GET
-  async getProposalByJobId(req, res) {
+  async getReceivedProposals(req, res) {
     try {
-      const { job_id } = req.query;
+      const { useraccount_id } = req.query;
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(job_id.toString()))
+        if (validator.isEmpty(useraccount_id.toString()))
           return res
             .status(400)
             .send({ message: "Please provide all fields " });
-        const data = await prisma.proposal.findMany({
+        const existsUser = await prisma.user_account.findUnique({
           where: {
-            job_id: Number(job_id),
+            user_id: Number(useraccount_id),
+          },
+          include: {
+            role: true,
           },
         });
-        res.status(200).json({
-          status: 200,
-          data: data,
-        });
+        console.log(existsUser.role.name);
+        if (existsUser) {
+          if (existsUser.role.name === "freelancer") {
+            const freelancer = await prisma.freelancer.findFirst({
+              where: {
+                useraccount_id: Number(useraccount_id),
+              },
+            });
+            const post = await prisma.job.findMany({
+              where: {
+                freelancer_id: Number(freelancer.freelancer_id),
+              },
+              select: {
+                proposal: {
+                  include: {
+                    user_account: true,
+                    payment: true,
+                    has_proposal_task: {
+                      include: {
+                        task: true,
+                      },
+                    },
+                    job: {
+                      include: {
+                        task: true,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+            // The flatMap method is used to map and flatten the nested arrays into a single-level array.
+            const proposalData = post.flatMap((job) => job.proposal);
+            res.status(200).json({
+              status: 200,
+              data: proposalData,
+            });
+          } else if (existsUser.role.name === "client") {
+            const client = await prisma.client.findFirst({
+              where: {
+                useraccount_id: Number(useraccount_id),
+              },
+            });
+            const post = await prisma.job.findMany({
+              where: {
+                client_id: Number(client.client_id),
+              },
+              select: {
+                proposal: {
+                  include: {
+                    user_account: true,
+                    payment: true,
+                    has_proposal_task: {
+                      include: {
+                        task: true,
+                      },
+                    },
+                    job: {
+                      include: {
+                        task: true,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+            const proposalData = post.flatMap((job) => job.proposal);
+            res.status(200).json({
+              status: 200,
+              data: proposalData,
+            });
+          }
+        }
       } else {
         return res
           .status(401)
@@ -60,7 +132,22 @@ module.exports = {
           where: {
             useraccount_id: Number(useraccount_id),
           },
+          include: {
+            user_account: true,
+            payment: true,
+            has_proposal_task: {
+              include: {
+                task: true,
+              },
+            },
+            job: {
+              include: {
+                task: true,
+              },
+            },
+          },
         });
+
         res.status(200).json({
           status: 200,
           data: data,
