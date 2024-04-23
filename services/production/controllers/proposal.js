@@ -274,7 +274,6 @@ module.exports = {
         if (validator.isEmpty(proposal_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
-
         const data = await prisma.proposal.update({
           where: {
             proposal_id,
@@ -283,6 +282,46 @@ module.exports = {
             proposal_status,
           },
         });
+
+        if (data?.proposal_status === "accept") {
+          const tasks = await prisma.task.findMany({
+            where: {
+              has_proposal_task: {
+                some: {
+                  proposal_id: parseInt(proposal_id),
+                },
+              },
+            },
+            include: {
+              has_proposal_task: true,
+            },
+          });
+          const taskUpdates = tasks.map((task) => ({
+            where: {
+              task_id: task.task_id,
+            },
+            data: {
+              status: "progress",
+            },
+          }));
+
+          await prisma.$transaction(
+            taskUpdates.map((update) => prisma.task.update(update))
+          );
+
+          const contract = await prisma.contract.findFirst({
+            where: {
+              proposal_id: parseInt(proposal_id),
+            },
+          });
+          if (!contract) {
+            await prisma.contract.create({
+              data: {
+                proposal_id: parseInt(proposal_id),
+              },
+            });
+          }
+        }
 
         res.status(200).json({
           status: 200,

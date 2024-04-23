@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const savedPost = require("../controllers/savedPost");
 const dispute = require("../controllers/dispute");
 const proposal = require("../controllers/proposal");
+const contract = require("../controllers/contract");
 
 var router = express.Router();
 
@@ -65,6 +66,10 @@ router.post("/proposals", (req, res) => proposal.addProposal(req, res))
 router.get("/proposalsByUser", (req, res) => proposal.getProposalByUserId(req, res))
 router.get("/receivedProposals", (req, res) => proposal.getReceivedProposals(req, res))
 router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
+
+// Contract Routes
+router.get("/contracts", (req, res) => contract.getContracts(req, res))
+router.get("/contractsByProposalIds", (req, res) => contract.getContractsByProposalIds(req, res))
 
 
 
