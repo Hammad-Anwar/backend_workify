@@ -112,7 +112,7 @@ module.exports = {
             },
           },
           orderBy: {
-            feature_id: "asc",
+            feature_id: "desc",
           },
         });
         const transformedData = data.map((item) => ({
@@ -564,7 +564,7 @@ module.exports = {
                 },
               },
               orderBy: {
-                job_id: "asc",
+                job_id: "desc",
               },
               select: {
                 job_id: true,
