@@ -8,6 +8,10 @@ const savedPost = require("../controllers/savedPost");
 const dispute = require("../controllers/dispute");
 const proposal = require("../controllers/proposal");
 const contract = require("../controllers/contract");
+const form = require("../controllers/form");
+const response = require("../controllers/response");
+const question = require("../controllers/question");
+const admin = require("../controllers/admin");
 
 var router = express.Router();
 
@@ -60,7 +64,7 @@ router.get("/disputeComplains", (req, res) => dispute.getDisputeComplains(req, r
 router.post("/dispute", (req, res) => dispute.addDispute(req, res))
 router.post("/disputeComplain", (req, res) => dispute.addDisputeComplains(req, res))
 
-// Disputes Routes
+// Proposal Routes
 router.get("/proposals", (req, res) => proposal.getProposals(req, res))
 router.post("/proposals", (req, res) => proposal.addProposal(req, res))
 router.get("/proposalsByUser", (req, res) => proposal.getProposalByUserId(req, res))
@@ -71,6 +75,36 @@ router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
 router.get("/contracts", (req, res) => contract.getContracts(req, res))
 router.get("/contractsByProposalIds", (req, res) => contract.getContractsByProposalIds(req, res))
 
+// Admin Panel Routes
+// Form Routes
+router.get("/forms", (req, res) => form.getForms(req, res));
+// router.get("/formsUser", (req, res) => form.getFormsWithUsers(req, res));
+router.get("/form", (req, res) => form.getSingleForm(req, res));
+router.post("/form", (req, res) => form.addForm(req, res));
+router.put("/live", (req, res) => form.updateLive(req, res));
+router.put("/form", (req, res) => form.updateForm(req, res));
+router.delete("/form", (req, res) => form.deleteForm(req, res));
+
+// Question Routes
+router.get("/questions", (req, res) => question.getQuestions(req, res));
+router.get("/questionsForm", (req, res) => question.getQuestionWithForm(req, res));
+router.get("/quesAns", (req, res) => question.getQuestionWithAns(req, res));
+router.get("/question", (req, res) => question.getSingleQuestion(req, res));
+router.post("/question", (req, res) => question.addQuestion(req, res));
+router.put("/question", (req, res) => question.updateQuestion(req, res));
+router.delete("/question", (req, res) => question.deleteQuestion(req, res));
+
+// Response Routes
+router.get("/responses", (req, res) => response.getResponses(req, res));
+router.get("/responsesQueAndForm", (req, res) => response.getResponseWithQueAndForm(req, res));
+router.get("/response", (req, res) => response.getSingleFormWithResponse(req, res));
+router.post("/response", (req, res) => response.addResponse(req, res));
+router.put("/response", (req, res) => response.updateResponse(req, res));
+router.delete("/response", (req, res) => response.deleteResponse(req, res));
+
+//Admin Routes 
+router.get("/usersByAdmin", (req, res) => admin.getAllUsers(req, res));
+router.get("/userByAdmin", (req, res) => admin.getSingleUserById(req, res));
 
 
 

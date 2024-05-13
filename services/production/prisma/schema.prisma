@@ -253,6 +253,7 @@ model user_account {
   dispute           dispute[]
   dispute_complains dispute_complains[]
   proposal          proposal[]
+  form              form[]
 }
 
 model role {
@@ -267,4 +268,67 @@ model job_attachment {
   image         String? @db.VarChar
   documents     String? @db.VarChar
   job           job?    @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+}
+
+model option {
+  id                   Int                   @id @default(autoincrement())
+  label                String                @db.VarChar
+  question_id          Int
+  question             question              @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  has_response_options has_response_option[] @relation("response_to_option")
+}
+
+model has_response_option {
+  id          Int      @id @default(autoincrement())
+  option_id   Int
+  response_id Int
+  option      option   @relation("response_to_option", fields: [option_id], references: [id], onDelete: Cascade)
+  response    response @relation("response_to_option", fields: [response_id], references: [id], onDelete: Cascade)
+}
+
+model question {
+  id               Int           @id @default(autoincrement())
+  question         String?       @db.VarChar
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+  required         Boolean?      @db.Boolean
+  error            String?       @db.VarChar
+  placeholder      String?       @db.VarChar
+  question_type_id Int
+  question_type    question_type @relation("question_to_question_type", fields: [question_type_id], references: [id], onDelete: Cascade)
+  form_id          Int
+  form             form          @relation("question_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  options          option[]
+  responses        response[]    @relation("response_to_question")
+}
+
+model form {
+  id         Int          @id @default(autoincrement())
+  title      String?      @db.VarChar
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  user_id    Int
+  live       Boolean?     @db.Boolean
+  url        String?      @db.VarChar
+  user       user_account @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  questions  question[]   @relation("question_to_form")
+  responses  response[]   @relation("response_to_form")
+}
+
+model response {
+  id                   Int                   @id @default(autoincrement())
+  answer               String?               @db.VarChar
+  created_at           DateTime              @default(now())
+  updated_at           DateTime              @updatedAt
+  question_id          Int
+  form_id              Int
+  form                 form                  @relation("response_to_form", fields: [form_id], references: [id], onDelete: Cascade)
+  question             question              @relation("response_to_question", fields: [question_id], references: [id], onDelete: Cascade)
+  has_response_options has_response_option[] @relation("response_to_option")
+}
+
+model question_type {
+  id        Int        @id @default(autoincrement())
+  label     String?    @db.VarChar
+  questions question[] @relation("question_to_question_type")
 }
