@@ -28,6 +28,12 @@ module.exports = {
                 question_id: true,
               },
             },
+
+            user: {
+              select: {
+                user_name: true,
+              },
+            },
           },
         });
         return res.status(200).json({
@@ -75,39 +81,38 @@ module.exports = {
   async getSingleForm(req, res) {
     try {
       const { id } = req.query;
-        if (validator.isEmpty(id.toString()))
-          return res.status(400).send({ data: "Please provide id " });
-        const form = await prisma.form.findUnique({
-          where: {
-            id: Number(id),
-          },
-          select: {
-            id: true,
-            title: true,
-            user_id: true,
-            live:true,
-            questions: {
-              select: {
-                id: true,
-                question_type:true,
-                question: true,
-                required: true,
-                error: true,
-                placeholder: true,
-                options: {
-                  select: {
-                    id:true,
-                    label: true,
-                  },
+      if (validator.isEmpty(id.toString()))
+        return res.status(400).send({ data: "Please provide id " });
+      const form = await prisma.form.findUnique({
+        where: {
+          id: Number(id),
+        },
+        select: {
+          id: true,
+          title: true,
+          user_id: true,
+          live: true,
+          questions: {
+            select: {
+              id: true,
+              question_type: true,
+              question: true,
+              required: true,
+              error: true,
+              placeholder: true,
+              options: {
+                select: {
+                  id: true,
+                  label: true,
                 },
               },
             },
           },
-        });
-        return res.status(200).json({
-          data: form,
-        });
-     
+        },
+      });
+      return res.status(200).json({
+        data: form,
+      });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
