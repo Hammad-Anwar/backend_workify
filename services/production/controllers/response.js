@@ -80,7 +80,10 @@ module.exports = {
             questions: {
               select: {
                 id: true,
+                question_type:true,
                 question: true,
+                required: true,
+                error: true,
                 options: {
                   select: {
                     id: true,
