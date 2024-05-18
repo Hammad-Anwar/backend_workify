@@ -683,6 +683,7 @@ module.exports = {
         },
       });
       res.status(200).json({
+        status: 200,
         message: "Data Delete Successfully",
       });
     } catch (e) {

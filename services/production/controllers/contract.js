@@ -8,10 +8,18 @@ const crypto = require("crypto");
 module.exports = {
   async getContracts(req, res) {
     try {
-      const data = await prisma.contract.findMany({});
-      res.status(200).json({
-        data,
-      });
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        const data = await prisma.contract.findMany({});
+        res.status(200).json({
+          data,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }

@@ -4,15 +4,28 @@ const generateToken = require("../utilities/generateToken");
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
+const { status } = require("express/lib/response");
 
 module.exports = {
   // GET User account table data
   async getDisputes(req, res) {
     try {
-      const data = await prisma.dispute.findMany({});
-      res.status(200).json({
-        data,
-      });
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        const data = await prisma.dispute.findMany({
+          include: {
+            user_account: true,
+          },
+        });
+        res.status(200).json({
+          data,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
@@ -97,6 +110,7 @@ module.exports = {
           },
           include: {
             dispute_complains: true,
+            user_account: true,
           },
         });
         res.status(200).json({
@@ -183,6 +197,68 @@ module.exports = {
           .status(401)
           .send({ status: 401, data: "Please provide a valid auth token" });
       }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // PUT Update Status
+  async updateDisputeStatus(req, res) {
+    try {
+      const { id, status } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (
+          validator.isEmpty(id.toString()) ||
+          validator.isEmpty(status.toString())
+        )
+          return res.status(400).send({ data: "Please provide all fields " });
+        try {
+          const dispute = await prisma.dispute.update({
+            where: {
+              dispute_id: Number(id),
+            },
+            data: {
+              status,
+            },
+          });
+          return res.status(200).json({
+            status: 200,
+            message: "Form Update Successfully",
+            data: dispute,
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: "Form data does not exist!" });
+          }
+          throw error;
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+  // DELETE Dispute
+  async deleteDispute(req, res) {
+    try {
+      const { dispute_id } = req.query;
+      if (validator.isEmpty(dispute_id.toString())) {
+        return res.status(400).send({ message: "Please provide all fields" });
+      }
+      await prisma.dispute.delete({
+        where: {
+          dispute_id: Number(dispute_id),
+        },
+      });
+      res.status(200).json({
+        status: 200,
+        message: "Data Delete Successfully",
+      });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }

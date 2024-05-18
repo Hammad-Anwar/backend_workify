@@ -63,6 +63,8 @@ router.get("/closedDisputes", (req, res) => dispute.getClosedDispute(req, res))
 router.get("/disputeComplains", (req, res) => dispute.getDisputeComplains(req, res))
 router.post("/dispute", (req, res) => dispute.addDispute(req, res))
 router.post("/disputeComplain", (req, res) => dispute.addDisputeComplains(req, res))
+router.put("/disputeStatus", (req, res) => dispute.updateDisputeStatus(req, res))
+router.delete("/dispute", (req, res) => dispute.deleteDispute(req, res))
 
 // Proposal Routes
 router.get("/proposals", (req, res) => proposal.getProposals(req, res))
