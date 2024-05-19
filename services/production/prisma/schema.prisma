@@ -28,12 +28,24 @@ model client {
 }
 
 model contract {
-  contract_id     Int       @id @default(autoincrement())
+  contract_id     Int               @id @default(autoincrement())
   proposal_id     Int?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  contract_status String    @default("working")
-  proposal        proposal? @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  contract_status String            @default("working")
+  proposal        proposal?         @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+  cancel_contract cancel_contract[]
+}
+
+model cancel_contract {
+  id           Int           @id @default(autoincrement())
+  contract_id  Int?
+  user_id      Int?
+  message      String?       @db.VarChar
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  contract     contract?     @relation(fields: [contract_id], references: [contract_id], onDelete: Cascade)
+  user_account user_account? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model feature_job {
@@ -244,6 +256,8 @@ model user_account {
   created_at        DateTime            @default(now())
   updated_at        DateTime            @updatedAt
   role_id           Int
+  status            String              @default("unverified")
+  fcmToken          String              @default("")
   role              role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
   client            client[]
   freelancer        freelancer[]
@@ -254,6 +268,7 @@ model user_account {
   dispute_complains dispute_complains[]
   proposal          proposal[]
   form              form[]
+  cancel_contract   cancel_contract[]
 }
 
 model role {

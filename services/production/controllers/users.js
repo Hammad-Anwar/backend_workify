@@ -82,7 +82,7 @@ module.exports = {
   // LOGIN POST
   async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password, fcmToken } = req.body;
       if (validator.isEmpty(email) || validator.isEmpty(password))
         return res.status(400).send({ message: "Please provide all fields " });
       const userFound = await prisma.user_account.findFirst({
@@ -97,14 +97,20 @@ module.exports = {
           role: true,
         },
       });
+      await prisma.user_account.update({
+        where: {
+          user_id: parseInt(userFound.user_id),
+        },
+        data: {
+          fcmToken,
+        },
+      });
       if (!userFound) {
         return res.status(404).send({
           status: 404,
           message: "User not found or Incorrect email or password!",
         });
       }
-      console.log(userFound)
-
       if (userFound.role.name == "freelancer") {
         const freelancerUser = await prisma.freelancer.findFirst({
           where: {
@@ -164,7 +170,7 @@ module.exports = {
         },
         include: {
           role: true,
-        }
+        },
       });
       if (!userFound) {
         return res.status(404).send({
@@ -415,18 +421,18 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-// get skills by freelanceridi
+  // get skills by freelanceridi
   async getSkillsByFreelancer(req, res) {
     try {
       const { freelancer_id } = req.query;
       let token = req.headers["authorization"];
 
       if (token) {
-        token = await verifyToken(token.split(" ")[1]);;
+        token = await verifyToken(token.split(" ")[1]);
 
         const skills = await prisma.has_skill.findMany({
           where: {
-            freelancer_id: Number(freelancer_id)
+            freelancer_id: Number(freelancer_id),
           },
           include: {
             skill_category: true,

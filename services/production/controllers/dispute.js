@@ -225,7 +225,7 @@ module.exports = {
           });
           return res.status(200).json({
             status: 200,
-            message: "Form Update Successfully",
+            message: "Status Update Successfully",
             data: dispute,
           });
         } catch (error) {

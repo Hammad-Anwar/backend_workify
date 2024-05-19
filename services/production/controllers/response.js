@@ -77,10 +77,16 @@ module.exports = {
           select: {
             id: true,
             title: true,
+            user_id: true,
+            user: {
+              select: {
+                status: true,
+              },
+            },
             questions: {
               select: {
                 id: true,
-                question_type:true,
+                question_type: true,
                 question: true,
                 required: true,
                 error: true,
@@ -127,41 +133,42 @@ module.exports = {
   async addResponse(req, res) {
     try {
       const { form_id, responses } = req.body;
-  
+
       if (validator.isEmpty(form_id.toString()) || !Array.isArray(responses)) {
         return res.status(400).json({
           status: 400,
           message: "Please provide valid form_id and responses array",
         });
       }
-  
+
       const createdResponses = [];
-  
+
       for (const response of responses) {
         const { question_id, answer, response_options } = response;
-  
+
         if (!question_id) {
           return res.status(400).json({
             status: 400,
-            message: "Please provide valid question_id and answer for each response",
+            message:
+              "Please provide valid question_id and answer for each response",
           });
         }
-  
+
         const optionsForQuestion = await prisma.option.findMany({
           where: { question_id },
         });
-  
+
         // Ensure response_options is an array
         const responseOptionsArray = Array.isArray(response_options)
           ? response_options
           : response_options
-            ? [response_options]
-            : [];
-  
+          ? [response_options]
+          : [];
+
         const optionsToCreate = responseOptionsArray.filter((opt) =>
           optionsForQuestion.some((o) => o.id === opt)
         );
-  
+
         const createdResponse = await prisma.response.create({
           data: {
             form_id,
@@ -179,10 +186,10 @@ module.exports = {
             has_response_options: true, // Include associated options in the response
           },
         });
-  
+
         createdResponses.push(createdResponse);
       }
-  
+
       return res.status(200).json({
         status: 200,
         message: "Data added successfully",
@@ -192,7 +199,7 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
-  
+
   // PUT
   async updateResponse(req, res) {
     try {

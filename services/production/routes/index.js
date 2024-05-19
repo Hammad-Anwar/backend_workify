@@ -75,9 +75,12 @@ router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
 
 // Contract Routes
 router.get("/contracts", (req, res) => contract.getContracts(req, res))
+router.get("/cancelContracts", (req, res) => contract.getCancelContracts(req, res))
+router.get("/contract", (req, res) => contract.getContractById(req, res))
 router.get("/contractsByProposalIds", (req, res) => contract.getContractsByProposalIds(req, res))
+router.post("/cancelContractReq", (req, res) => contract.addCancelContract(req, res))
+router.put("/updateContractStatus", (req, res) => contract.updateContractStatus(req, res))
 
-// Admin Panel Routes
 // Form Routes
 router.get("/forms", (req, res) => form.getForms(req, res));
 // router.get("/formsUser", (req, res) => form.getFormsWithUsers(req, res));
@@ -107,6 +110,7 @@ router.delete("/response", (req, res) => response.deleteResponse(req, res));
 //Admin Routes 
 router.get("/usersByAdmin", (req, res) => admin.getAllUsers(req, res));
 router.get("/userByAdmin", (req, res) => admin.getSingleUserById(req, res));
+router.put("/updateUserStatus", (req, res) => admin.updateUserStatus(req, res));
 
 
 
