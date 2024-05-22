@@ -18,6 +18,7 @@ var router = express.Router();
 
 //User account Routes 
 router.get("/users", (req, res) => users.getUsers(req, res));
+router.get("/userById", (req, res) => users.getUserById(req, res));
 router.get("/user", (req, res) => users.getUser(req, res));
 router.post("/login", (req, res) => users.login(req, res));
 router.post("/signup", (req, res) => users.signUp(req, res));

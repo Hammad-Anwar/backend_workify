@@ -37,6 +37,8 @@ model contract {
   cancel_contract cancel_contract[]
 }
 
+// contract_status : working, complete request, complete, cancel request, order cancel, 
+
 model cancel_contract {
   id           Int           @id @default(autoincrement())
   contract_id  Int?
@@ -270,6 +272,8 @@ model user_account {
   form              form[]
   cancel_contract   cancel_contract[]
 }
+
+// Status: unverified, verified, verification request
 
 model role {
   id           Int            @id @default(autoincrement())

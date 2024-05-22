@@ -116,8 +116,14 @@ module.exports = {
               include: {
                 user_account: true,
                 payment: true,
+                has_proposal_task: {
+                  include: {
+                    task: true,
+                  },
+                },
                 job: {
                   include: {
+                    task: true,
                     freelancer: {
                       include: {
                         user_account: true,
@@ -142,8 +148,41 @@ module.exports = {
             },
           },
         });
+        const transformedData = {
+          ...data,
+          proposal: {
+            ...data.proposal,
+            job: {
+              ...data.proposal.job,
+              skill_name: data.proposal?.job?.skill_category?.skill_name,
+              skill_category: undefined,
+              payment_amount: data.proposal?.job?.payment?.payment_amount,
+              payment: undefined,
+
+              freelancer: {
+                freelancer_id: data.proposal?.job?.freelancer?.freelancer_id,
+                first_name:
+                  data.proposal?.job?.freelancer?.user_account?.first_name,
+                last_name:
+                  data.proposal?.job?.freelancer?.user_account?.last_name,
+                image: data.proposal?.job?.freelancer?.user_account?.image,
+              },
+              client: {
+                client_id: data.proposal?.job?.client?.client_id,
+                first_name:
+                  data.proposal?.job?.client?.user_account?.first_name,
+                last_name: data.proposal?.job?.client?.user_account?.last_name,
+                image: data.proposal?.job?.client?.user_account?.image,
+              },
+              saved_post: {
+                savedPost_status: data.proposal?.job?.saved_post[0]?.status,
+              },
+            },
+          },
+        };
         res.status(200).json({
-          data,
+          status: 200,
+          data: transformedData,
         });
       } else {
         return res
@@ -212,29 +251,47 @@ module.exports = {
           validator.isEmpty(contract_id.toString()) ||
           validator.isEmpty(message)
         )
-          return res
-            .status(400)
-            .send({ message: "Please provide all fields " });
-        await prisma.contract.update({
+          return res.status(400).send({ message: "Please provide all fields" });
+        const checkStatus = await prisma.contract.findUnique({
           where: {
             contract_id,
           },
-          data: {
-            contract_status: "cancel request",
-          },
         });
-        const data = await prisma.cancel_contract.create({
-          data: {
-            contract_id,
-            user_id,
-            message,
-          },
-        });
-        res.status(200).json({
-          status: 200,
-          message: "Cancel Request Send Successfully",
-          data: data,
-        });
+        if (checkStatus.contract_status === "working") {
+          await prisma.contract.update({
+            where: {
+              contract_id,
+            },
+            data: {
+              contract_status: "cancel request",
+            },
+          });
+          const data = await prisma.cancel_contract.create({
+            data: {
+              contract_id,
+              user_id,
+              message,
+            },
+          });
+          res.status(200).json({
+            status: 200,
+            message: "Cancel Request Send Successfully",
+            data: data,
+          });
+        } else {
+          const data = await prisma.cancel_contract.create({
+            data: {
+              contract_id,
+              user_id,
+              message,
+            },
+          });
+          res.status(200).json({
+            status: 200,
+            message: "Cancel Request Send Successfully",
+            data: data,
+          });
+        }
       } else {
         return res
           .status(401)
