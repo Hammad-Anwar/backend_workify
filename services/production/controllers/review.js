@@ -6,17 +6,18 @@ const validator = require("validator");
 const crypto = require("crypto");
 
 module.exports = {
-  // GET User account table data
-  async getUsers(req, res) {
+  // GET Review account table data
+  async getReviews(req, res) {
     try {
-      const user_accounts = await prisma.user_account.findMany({});
+      const data = await prisma.review.findMany({});
       res.status(200).json({
-        data: user_accounts,
+        data: data,
       });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
+
   // GET SINGLE User data without token
   async getUser(req, res) {
     try {
@@ -51,7 +52,7 @@ module.exports = {
   },
 
   // ADD USER POST
-  async addUser(req, res) {
+  async addReview(req, res) {
     try {
       const { user_id, image, userData } = req.body;
       let token = req.headers["authorization"];
@@ -62,135 +63,18 @@ module.exports = {
           return res.status(400).send({ message: "Please provide all fields" });
         }
 
-        const existsUser = await prisma.user_account.findUnique({
-          where: { user_id: user_id },
-          include: {
-            role: true,
+        const data = await prisma.review.create({
+          data: {
+            user_id,
+            job_id,
+            rating,
+            review_comment,
           },
         });
 
-        if (existsUser) {
-          if (existsUser.role.name === "freelancer") {
-            const {
-              overview,
-              experience,
-              provider,
-              description,
-              links,
-              location,
-            } = userData;
-
-            const freelancerData = await prisma.freelancer.create({
-              data: {
-                overview,
-                experience,
-                provider,
-                description,
-                links,
-                location,
-                user_account: {
-                  connect: {
-                    user_id: existsUser.user_id,
-                  },
-                },
-              },
-              include: {
-                user_account: true,
-              },
-            });
-
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
-            res.status(200).json({
-              status: 200,
-              message: "Data added successfully in freelancer user",
-              data: freelancerData,
-            });
-          } else if (existsUser.role.name === "client") {
-            const { overview, location } = userData;
-
-            const clientData = await prisma.client.create({
-              data: {
-                overview,
-                location,
-                user_account: {
-                  connect: {
-                    user_id: existsUser.user_id,
-                  },
-                },
-              },
-              include: {
-                user_account: true,
-              },
-            });
-
-            await prisma.user_account.update({
-              where: { user_id: existsUser.user_id },
-              data: {
-                image, // assuming 'image' is the Base64-encoded image string
-              },
-            });
-
-            res.status(200).json({
-              status: 200,
-              message: "Data added successfully in client user",
-              data: clientData,
-            });
-          }
-        } else {
-          return res
-            .status(404)
-            .send({ status: 404, message: " User is not found!!!" });
-        }
-      } else {
-        return resUser
-          .status(401)
-          .send({ status: 401, data: "Please provide a valid auth token" });
-      }
-    } catch (e) {
-      return res.status(500).json({ status: 500, message: e.message });
-    }
-  },
-  // POST Add skills for freelancer
-  async addSkills(req, res) {
-    try {
-      const { user_id, has_skills } = req.body;
-      let token = req.headers["authorization"];
-
-      if (token) {
-        token = await verifyToken(token.split(" ")[1]);
-
-        const freelancerExists = await prisma.freelancer.findFirst({
-          where: {
-            useraccount_id: Number(user_id),
-          },
-        });
-
-        if (freelancerExists) {
-          const skillCategoryData = has_skills.map(({ skill_id }) => ({
-            skill_id,
-            freelancer_id: freelancerExists.freelancer_id,
-          }));
-
-          const skillsCat = await prisma.has_skill.createMany({
-            data: skillCategoryData,
-          });
-
-          res.status(200).json({
-            status: 200,
-            message: "Skills added successfully for freelancer",
-            data: skillCategoryData,
-          });
-        } else {
-          return res
-            .status(404)
-            .send({ status: 404, data: "Freelancer not found" });
-        }
+        return res
+          .status(200)
+          .json({ status: 200, data, message: " Review send successfully!!!" });
       } else {
         return res
           .status(401)

@@ -24,7 +24,6 @@ model client {
   overview       String?       @db.VarChar
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
   job            job[]
-  review         review[]
 }
 
 model contract {
@@ -72,7 +71,6 @@ model freelancer {
   user_account   user_account? @relation(fields: [useraccount_id], references: [user_id], onDelete: Cascade)
   has_skill      has_skill[]
   job            job[]
-  review         review[]
 }
 
 model has_skill {
@@ -107,6 +105,7 @@ model job {
   proposal         proposal[]
   task             task[]
   saved_post       saved_post[]
+  review           review[]
 }
 
 model saved_post {
@@ -216,15 +215,15 @@ model has_proposal_task {
 }
 
 model review {
-  review_id      Int         @id @default(autoincrement())
-  freelancer_id  Int?
-  client_id      Int?
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  rating         Decimal?    @db.Decimal
-  review_comment String?     @db.VarChar
-  client         client?     @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
-  freelancer     freelancer? @relation(fields: [freelancer_id], references: [freelancer_id], onDelete: Cascade)
+  review_id      Int           @id @default(autoincrement())
+  user_id        Int?
+  job_id         Int?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  rating         Decimal?      @db.Decimal
+  review_comment String?       @db.VarChar
+  user_account   user_account? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  job            job?          @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
 
 model skill_category {
@@ -271,6 +270,7 @@ model user_account {
   proposal          proposal[]
   form              form[]
   cancel_contract   cancel_contract[]
+  review            review[]
 }
 
 // Status: unverified, verified, verification request
