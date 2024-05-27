@@ -4,6 +4,7 @@ const generateToken = require("../utilities/generateToken");
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
+const { notify } = require("../utilities/notification");
 
 module.exports = {
   async getProposals(req, res) {
@@ -176,7 +177,9 @@ module.exports = {
       } = req.body;
       let token = req.headers["authorization"];
       if (token) {
-        token = await verifyToken(token.split(" ")[1]);
+        const decoded = await verifyToken(token.split(" ")[1]);
+        const fcmToken = decoded.user.fcmToken;
+        console.log("fcmToken: ", fcmToken);
         if (
           validator.isEmpty(useraccount_id.toString()) ||
           validator.isEmpty(job_id.toString()) ||
@@ -213,15 +216,13 @@ module.exports = {
             has_proposal_task: true,
           },
         });
-        if (selectedTasks.length === 0) {
-          res.status(200).json({
-            status: 200,
-            message: "Proposal Send Successfully",
-            data: data,
-          });
-        } else {
+
+        let responseMessage = "Proposal Send Successfully";
+        let responseData = data;
+
+        if (selectedTasks.length > 0) {
           const proposal_id = Number(data.proposal_id);
-          const tasks = await Promise.all(
+          await Promise.all(
             selectedTasks.map((task_id) => {
               return prisma.has_proposal_task.create({
                 data: {
@@ -239,20 +240,37 @@ module.exports = {
               });
             })
           );
+
           const taskData = await prisma.proposal.findFirst({
             where: {
-              proposal_id: Number(tasks[0].proposal_id),
+              proposal_id: proposal_id,
             },
             include: {
               has_proposal_task: true,
             },
           });
-          res.status(200).json({
-            status: 200,
-            message: "Proposal Send Successfully with selected Tasks",
-            data: taskData,
-          });
+
+          responseMessage = "Proposal Send Successfully with selected Tasks";
+          responseData = taskData;
         }
+
+        // Send the response to the client
+        res.status(200).json({
+          status: 200,
+          message: responseMessage,
+          data: responseData,
+        });
+
+        // Send FCM notification after responding to the client
+        const message = {
+          token: fcmToken,
+          notification: {
+            title: "Proposal Submitted",
+            body: "Your proposal has been submitted successfully.",
+          },
+        };
+
+        notify(message);
       } else {
         return res
           .status(401)

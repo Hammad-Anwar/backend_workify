@@ -8,18 +8,12 @@ admin.initializeApp({
 });
 
 async function notify(message) {
-  admin
-    .messaging()
-    .send(message)
-    .then((response) => {
-      res.status(200).json({
-        message: "Message sent successfully",
-        response: response,
-      });
-    })
-    .catch((error) => {
-      res.status(500).json({ error: error.message });
-    });
+  try {
+    const response = await admin.messaging().send(message);
+    console.log("Message sent successfully:", response);
+  } catch (error) {
+    console.error("Error sending message:", error);
+  }
 }
 
 module.exports = { notify };
