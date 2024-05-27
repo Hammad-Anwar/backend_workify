@@ -4,6 +4,7 @@ const generateToken = require("../utilities/generateToken");
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
+const { uploadImage } = require("../utilities/cloudinary");
 
 module.exports = {
   // GET User account table data
@@ -542,7 +543,7 @@ module.exports = {
         ) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
-
+        const imgUrl = await uploadImage(image);
         const existsUser = await prisma.user_account.findUnique({
           where: { user_id: user_id },
           include: {
@@ -585,7 +586,7 @@ module.exports = {
               data: {
                 first_name,
                 last_name,
-                image,
+                image: imgUrl,
               },
             });
 
@@ -618,7 +619,7 @@ module.exports = {
               data: {
                 first_name,
                 last_name,
-                image,
+                image: imgUrl,
               },
             });
 

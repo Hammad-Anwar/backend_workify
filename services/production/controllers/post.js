@@ -701,179 +701,172 @@ module.exports = {
             } = postData;
 
             const imgUrl = await uploadImage(image);
-            console.log("ss", imgUrl)
-
-            return res
-              .status(200)
-              .send({ status: 200, message: "test", data: postData });
-
-            // const freelancerPost = await prisma.job.create({
-            //   data: {
-            //     freelancer: {
-            //       connect: {
-            //         freelancer_id: Number(freelancerId),
-            //       },
-            //     },
-            //     job_description,
-            //     duration,
-            //     image,
-            //     skill_category: {
-            //       connect: {
-            //         skill_id: Number(skillcategory_id),
-            //       },
-            //     },
-            //     payment: {
-            //       create: {
-            //         payment_amount: parseFloat(payment),
-            //       },
-            //     },
-            //     feature_job: {
-            //       create: {
-            //         status: Boolean(feature_job),
-            //       },
-            //     },
-            //   },
-            //   include: {
-            //     freelancer: true,
-            //     skill_category: true,
-            //     payment: true,
-            //     feature_job: true,
-            //   },
-            // });
-            // if (
-            //   task_descriptions.length === 0 ||
-            //   task_descriptions.every((description) => description === "")
-            // ) {
-            //   res.status(200).json({
-            //     status: 200,
-            //     message: "Data added successfully in freelancer user",
-            //     data: freelancerPost,
-            //   });
-            // } else {
-            //   const job_id = Number(freelancerPost.job_id);
-            //   const tasks = await Promise.all(
-            //     task_descriptions.map((description) => {
-            //       return prisma.task.create({
-            //         data: {
-            //           task_description: description,
-            //           job: {
-            //             connect: { job_id },
-            //           },
-            //         },
-            //         select: {
-            //           task_id: true,
-            //           task_description: true,
-            //           status: true,
-            //           job_id: true,
-            //           created_at: true,
-            //           updated_at: true,
-            //           job: {
-            //             include: {
-            //               freelancer: true,
-            //               skill_category: true,
-            //               payment: true,
-            //               feature_job: true,
-            //             },
-            //           },
-            //         },
-            //       });
-            //     })
-            //   );
-            //   res.status(200).json({
-            //     status: 200,
-            //     message: "Data added successfully in freelancer user",
-            //     data: tasks,
-            //   });
-            // }
+            const freelancerPost = await prisma.job.create({
+              data: {
+                freelancer: {
+                  connect: {
+                    freelancer_id: Number(freelancerId),
+                  },
+                },
+                job_description,
+                duration,
+                image: imgUrl,
+                skill_category: {
+                  connect: {
+                    skill_id: Number(skillcategory_id),
+                  },
+                },
+                payment: {
+                  create: {
+                    payment_amount: parseFloat(payment),
+                  },
+                },
+                feature_job: {
+                  create: {
+                    status: Boolean(feature_job),
+                  },
+                },
+              },
+              include: {
+                freelancer: true,
+                skill_category: true,
+                payment: true,
+                feature_job: true,
+              },
+            });
+            if (
+              task_descriptions.length === 0 ||
+              task_descriptions.every((description) => description === "")
+            ) {
+              res.status(200).json({
+                status: 200,
+                message: "Post published successfully",
+                data: freelancerPost,
+              });
+            } else {
+              const job_id = Number(freelancerPost.job_id);
+              const tasks = await Promise.all(
+                task_descriptions.map((description) => {
+                  return prisma.task.create({
+                    data: {
+                      task_description: description,
+                      job: {
+                        connect: { job_id },
+                      },
+                    },
+                    select: {
+                      task_id: true,
+                      task_description: true,
+                      status: true,
+                      job_id: true,
+                      created_at: true,
+                      updated_at: true,
+                      job: {
+                        include: {
+                          freelancer: true,
+                          skill_category: true,
+                          payment: true,
+                          feature_job: true,
+                        },
+                      },
+                    },
+                  });
+                })
+              );
+              res.status(200).json({
+                status: 200,
+                message: "Post published successfully",
+                data: tasks,
+              });
+            }
+          } else if (existsUser.role.name === "client") {
+            const {
+              job_description,
+              duration,
+              image,
+              payment,
+              skillcategory_id,
+              feature_job,
+            } = postData;
+            const imgUrl = await uploadImage(image);
+            const clientPost = await prisma.job.create({
+              data: {
+                client: {
+                  connect: {
+                    client_id: Number(clientId),
+                  },
+                },
+                job_description,
+                duration,
+                image: imgUrl,
+                skill_category: {
+                  connect: {
+                    skill_id: Number(skillcategory_id),
+                  },
+                },
+                payment: {
+                  create: {
+                    payment_amount: parseFloat(payment),
+                  },
+                },
+                feature_job: {
+                  create: {
+                    status: Boolean(feature_job),
+                  },
+                },
+              },
+              include: {
+                skill_category: true,
+                payment: true,
+                feature_job: true,
+              },
+            });
+            if (
+              task_descriptions.length === 0 ||
+              task_descriptions.every((description) => description === "")
+            ) {
+              res.status(200).json({
+                status: 200,
+                message: "Post published successfully",
+                data: clientPost,
+              });
+            } else {
+              const job_id = Number(clientPost.job_id);
+              const tasks = await Promise.all(
+                task_descriptions.map((description) => {
+                  return prisma.task.create({
+                    data: {
+                      task_description: description,
+                      job: {
+                        connect: { job_id },
+                      },
+                    },
+                    select: {
+                      task_id: true,
+                      task_description: true,
+                      status: true,
+                      job_id: true,
+                      created_at: true,
+                      updated_at: true,
+                      job: {
+                        include: {
+                          client: true,
+                          skill_category: true,
+                          payment: true,
+                          feature_job: true,
+                        },
+                      },
+                    },
+                  });
+                })
+              );
+              res.status(200).json({
+                status: 200,
+                message: "Post published successfully",
+                data: tasks,
+              });
+            }
           }
-          // } else if (existsUser.role.name === "client") {
-          //   const {
-          //     job_description,
-          //     duration,
-          //     image,
-          //     payment,
-          //     skillcategory_id,
-          //     feature_job,
-          //   } = postData;
-
-          //   const clientPost = await prisma.job.create({
-          //     data: {
-          //       client: {
-          //         connect: {
-          //           client_id: Number(clientId),
-          //         },
-          //       },
-          //       job_description,
-          //       duration,
-          //       image,
-          //       skill_category: {
-          //         connect: {
-          //           skill_id: Number(skillcategory_id),
-          //         },
-          //       },
-          //       payment: {
-          //         create: {
-          //           payment_amount: parseFloat(payment),
-          //         },
-          //       },
-          //       feature_job: {
-          //         create: {
-          //           status: Boolean(feature_job),
-          //         },
-          //       },
-          //     },
-          //     include: {
-          //       skill_category: true,
-          //       payment: true,
-          //       feature_job: true,
-          //     },
-          //   });
-          //   if (
-          //     task_descriptions.length === 0 ||
-          //     task_descriptions.every((description) => description === "")
-          //   ) {
-          //     res.status(200).json({
-          //       status: 200,
-          //       message: "Data added successfully in client user",
-          //       data: clientPost,
-          //     });
-          //   } else {
-          //     const job_id = Number(clientPost.job_id);
-          //     const tasks = await Promise.all(
-          //       task_descriptions.map((description) => {
-          //         return prisma.task.create({
-          //           data: {
-          //             task_description: description,
-          //             job: {
-          //               connect: { job_id },
-          //             },
-          //           },
-          //           select: {
-          //             task_id: true,
-          //             task_description: true,
-          //             status: true,
-          //             job_id: true,
-          //             created_at: true,
-          //             updated_at: true,
-          //             job: {
-          //               include: {
-          //                 client: true,
-          //                 skill_category: true,
-          //                 payment: true,
-          //                 feature_job: true,
-          //               },
-          //             },
-          //           },
-          //         });
-          //       })
-          //     );
-          //     res.status(200).json({
-          //       status: 200,
-          //       message: "Data added successfully in client user",
-          //       data: tasks,
-          //     });
-          //   }
-          // }
         } else {
           return res
             .status(404)
