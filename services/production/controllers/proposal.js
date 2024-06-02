@@ -179,7 +179,7 @@ module.exports = {
       if (token) {
         const decoded = await verifyToken(token.split(" ")[1]);
         const fcmToken = decoded.user.fcmToken;
-        console.log("fcmToken: ", fcmToken);
+        // console.log("fcmToken: ", fcmToken);
         if (
           validator.isEmpty(useraccount_id.toString()) ||
           validator.isEmpty(job_id.toString()) ||
@@ -191,6 +191,30 @@ module.exports = {
           return res
             .status(400)
             .send({ message: "Please provide all fields " });
+        const jobData = await prisma.job.findFirst({
+          where: { job_id: Number(job_id) },
+          include: {
+            client: {
+              include: {
+                user_account: true,
+              },
+            },
+            freelancer: {
+              include: {
+                user_account: true,
+              },
+            },
+          },
+        });
+        // Function to get the appropriate fcmToken
+        function getFcmToken(jobData) {
+          if (jobData.freelancer === null) {
+            return jobData.client.user_account.fcmToken;
+          } else {
+            return jobData.freelancer.user_account.fcmToken;
+          }
+        }
+        // console.log("Job Data", getFcmToken(jobData));
         const data = await prisma.proposal.create({
           data: {
             user_account: {
@@ -263,10 +287,10 @@ module.exports = {
 
         // Send FCM notification after responding to the client
         const message = {
-          token: fcmToken,
+          token: getFcmToken(jobData),
           notification: {
-            title: "Proposal Submitted",
-            body: "Your proposal has been submitted successfully.",
+            title: "Proposal Received",
+            body: "New proposal received.",
           },
         };
 

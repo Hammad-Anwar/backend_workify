@@ -5,6 +5,7 @@ const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
 const { status } = require("express/lib/response");
+const { uploadImage } = require("../utilities/cloudinary");
 
 module.exports = {
   // GET User account table data
@@ -142,12 +143,13 @@ module.exports = {
           return res
             .status(400)
             .send({ message: "Please provide all fields " });
+        const imgUrl = await uploadImage(complain_img);
         const data = await prisma.dispute.create({
           data: {
             useraccount_id,
             complain_title,
             complain_msg,
-            complain_img,
+            complain_img: imgUrl,
           },
         });
         res.status(200).json({

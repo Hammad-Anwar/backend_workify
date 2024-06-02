@@ -903,7 +903,7 @@ module.exports = {
         if (validator.isEmpty(job_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
-
+        const imgUrl = await uploadImage(image);
         const jobData = await prisma.job.update({
           where: {
             job_id,
@@ -911,7 +911,7 @@ module.exports = {
           data: {
             job_description,
             duration,
-            image,
+            image: imgUrl,
             skill_category: {
               connect: {
                 skill_id: skillcategory_id,

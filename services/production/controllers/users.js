@@ -128,6 +128,13 @@ module.exports = {
           role: true,
         },
       });
+
+      if (!userFound) {
+        return res.status(404).send({
+          status: 404,
+          message: "User not found or Incorrect email or password!",
+        });
+      }
       await prisma.user_account.update({
         where: {
           user_id: parseInt(userFound.user_id),
@@ -136,12 +143,6 @@ module.exports = {
           fcmToken,
         },
       });
-      if (!userFound) {
-        return res.status(404).send({
-          status: 404,
-          message: "User not found or Incorrect email or password!",
-        });
-      }
       if (userFound.role.name == "freelancer") {
         const freelancerUser = await prisma.freelancer.findFirst({
           where: {

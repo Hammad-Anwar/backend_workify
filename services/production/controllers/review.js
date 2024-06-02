@@ -18,8 +18,8 @@ module.exports = {
     }
   },
 
-  // GET SINGLE User data without token
-  async getUser(req, res) {
+  // GET Send User Review
+  async getSendUserReview(req, res) {
     try {
       const { user_id } = req.query;
       if (token) {
@@ -28,21 +28,17 @@ module.exports = {
           return res
             .status(400)
             .send({ message: "Please provide all fields " });
-        const user = await prisma.user_account.findUnique({
+        const data = await prisma.review.findUnique({
           where: {
-            user_id: Number(user_id),
-          },
-          include: {
-            freelancer: true,
-            client: true,
+            send_review_userId: Number(user_id),
           },
         });
         res.status(200).json({
           status: 200,
-          data: user,
+          data: data,
         });
       } else {
-        return resUser
+        return res
           .status(401)
           .send({ status: 401, data: "Please provide a valid auth token" });
       }
@@ -51,21 +47,62 @@ module.exports = {
     }
   },
 
+  // GET Send User Review
+  async getRecivedUserReview(req, res) {
+    try {
+      const { user_id } = req.query;
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(user_id.toString()) || !user_id)
+          return res
+            .status(400)
+            .send({ message: "Please provide all fields " });
+        const data = await prisma.review.findUnique({
+          where: {
+            received_review_userId: Number(user_id),
+          },
+        });
+        res.status(200).json({
+          status: 200,
+          data: data,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
   // ADD USER POST
   async addReview(req, res) {
     try {
-      const { user_id, image, userData } = req.body;
+      const {
+        send_review_userId,
+        received_review_userId,
+        job_id,
+        rating,
+        review_comment,
+      } = req.body;
       let token = req.headers["authorization"];
 
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
-        if (validator.isEmpty(image) || validator.isEmpty(user_id.toString())) {
+        if (
+          validator.isEmpty(review_comment) ||
+          validator.isEmpty(send_review_userId.toString()) ||
+          validator.isEmpty(received_review_userId.toString()) ||
+          validator.isEmpty(job_id.toString()) ||
+          validator.isEmpty(rating.toString())
+        ) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
 
         const data = await prisma.review.create({
           data: {
-            user_id,
+            send_review_userId,
+            received_review_userId,
             job_id,
             rating,
             review_comment,
@@ -74,7 +111,7 @@ module.exports = {
 
         return res
           .status(200)
-          .json({ status: 200, data, message: " Review send successfully!!!" });
+          .json({ status: 200, data, message: "Review send successfully!!!" });
       } else {
         return res
           .status(401)

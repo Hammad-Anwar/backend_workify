@@ -34,6 +34,7 @@ model contract {
   contract_status String            @default("working")
   proposal        proposal?         @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
   cancel_contract cancel_contract[]
+  notification    notification[]
 }
 
 // contract_status : working, complete request, complete, cancel request, order cancel, 
@@ -108,6 +109,21 @@ model job {
   review           review[]
 }
 
+model notification {
+  id           Int           @id @default(autoincrement())
+  title        String?       @db.VarChar
+  body         String?       @db.VarChar
+  created_at   DateTime      @default(now())
+  user_id      Int
+  proposal_id  Int?
+  contract_id  Int?
+  chatroom_id  Int?
+  user_account user_account? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  chatroom     chatroom?     @relation(fields: [chatroom_id], references: [chatroom_id], onDelete: Cascade)
+  contract     contract?     @relation(fields: [contract_id], references: [contract_id], onDelete: Cascade)
+  proposal     proposal?     @relation(fields: [proposal_id], references: [proposal_id], onDelete: Cascade)
+}
+
 model saved_post {
   id             Int           @id @default(autoincrement())
   status         Boolean?
@@ -125,6 +141,7 @@ model chatroom {
   job           job?            @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
   message       message[]
   user_chatroom user_chatroom[]
+  notification  notification[]
 }
 
 model user_chatroom {
@@ -204,6 +221,7 @@ model proposal {
   job               job?                @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
   payment           payment?            @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
   has_proposal_task has_proposal_task[]
+  notification      notification[]
 }
 
 model has_proposal_task {
@@ -215,15 +233,17 @@ model has_proposal_task {
 }
 
 model review {
-  review_id      Int           @id @default(autoincrement())
-  user_id        Int?
-  job_id         Int?
-  created_at     DateTime      @default(now())
-  updated_at     DateTime      @updatedAt
-  rating         Decimal?      @db.Decimal
-  review_comment String?       @db.VarChar
-  user_account   user_account? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  job            job?          @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
+  review_id              Int           @id @default(autoincrement())
+  send_review_userId     Int?
+  received_review_userId Int?
+  job_id                 Int?
+  created_at             DateTime      @default(now())
+  updated_at             DateTime      @updatedAt
+  rating                 Decimal?      @db.Decimal
+  review_comment         String?       @db.VarChar
+  sendReview_user        user_account? @relation("SendReviewUser", fields: [send_review_userId], references: [user_id], onDelete: Cascade)
+  receivedReview_user    user_account? @relation("ReceivedReviewUser", fields: [received_review_userId], references: [user_id], onDelete: Cascade)
+  job                    job?          @relation(fields: [job_id], references: [job_id], onDelete: Cascade)
 }
 
 model skill_category {
@@ -246,31 +266,33 @@ model task {
 }
 
 model user_account {
-  user_id           Int                 @id @default(autoincrement())
-  user_name         String              @unique(map: "user_name") @db.VarChar
-  email             String              @unique(map: "email") @db.VarChar
-  password          String              @db.VarChar
-  first_name        String?             @db.VarChar
-  last_name         String?             @db.VarChar
-  gender            String?             @db.VarChar
-  image             String?             @db.VarChar
-  created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
-  role_id           Int
-  status            String              @default("unverified")
-  fcmToken          String              @default("")
-  role              role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  client            client[]
-  freelancer        freelancer[]
-  message           message[]
-  user_chatroom     user_chatroom[]
-  saved_post        saved_post[]
-  dispute           dispute[]
-  dispute_complains dispute_complains[]
-  proposal          proposal[]
-  form              form[]
-  cancel_contract   cancel_contract[]
-  review            review[]
+  user_id             Int                 @id @default(autoincrement())
+  user_name           String              @unique(map: "user_name") @db.VarChar
+  email               String              @unique(map: "email") @db.VarChar
+  password            String              @db.VarChar
+  first_name          String?             @db.VarChar
+  last_name           String?             @db.VarChar
+  gender              String?             @db.VarChar
+  image               String?             @db.VarChar
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+  role_id             Int
+  status              String              @default("unverified")
+  fcmToken            String              @default("")
+  role                role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  client              client[]
+  freelancer          freelancer[]
+  message             message[]
+  user_chatroom       user_chatroom[]
+  saved_post          saved_post[]
+  dispute             dispute[]
+  dispute_complains   dispute_complains[]
+  proposal            proposal[]
+  form                form[]
+  cancel_contract     cancel_contract[]
+  sendReview_user     review[]            @relation("SendReviewUser")
+  receivedReview_user review[]            @relation("ReceivedReviewUser")
+  notification        notification[]
 }
 
 // Status: unverified, verified, verification request
