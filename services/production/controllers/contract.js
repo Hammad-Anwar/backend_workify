@@ -161,6 +161,8 @@ module.exports = {
 
               freelancer: {
                 freelancer_id: data.proposal?.job?.freelancer?.freelancer_id,
+                user_id:
+                  data.proposal?.job?.freelancer?.user_account?.user_id,
                 first_name:
                   data.proposal?.job?.freelancer?.user_account?.first_name,
                 last_name:
@@ -169,6 +171,8 @@ module.exports = {
               },
               client: {
                 client_id: data.proposal?.job?.client?.client_id,
+                user_id:
+                  data.proposal?.job?.client?.user_account?.user_id,
                 first_name:
                   data.proposal?.job?.client?.user_account?.first_name,
                 last_name: data.proposal?.job?.client?.user_account?.last_name,

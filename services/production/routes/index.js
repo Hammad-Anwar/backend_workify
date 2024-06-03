@@ -12,6 +12,7 @@ const form = require("../controllers/form");
 const response = require("../controllers/response");
 const question = require("../controllers/question");
 const admin = require("../controllers/admin");
+const review = require("../controllers/review");
 
 var router = express.Router();
 
@@ -31,7 +32,7 @@ router.get("/skills", (req, res) => users.getSkills(req, res));
 router.get("/freelancerSkills", (req, res) => users.getSkillsByFreelancer(req, res));
 router.get("/usersMe", (req, res) => users.getUserMe(req, res));
 
-// POst Controller Routes
+// Post Controller Routes
 router.get("/jobs", (req, res) => post.getJobs(req, res));
 router.get("/job", (req, res) => post.getJobById(req, res));
 router.get("/featuredJobs", (req, res) => post.getFeaturedPosts(req, res));
@@ -81,6 +82,13 @@ router.get("/contract", (req, res) => contract.getContractById(req, res))
 router.get("/contractsByProposalIds", (req, res) => contract.getContractsByProposalIds(req, res))
 router.post("/cancelContractReq", (req, res) => contract.addCancelContract(req, res))
 router.put("/updateContractStatus", (req, res) => contract.updateContractStatus(req, res))
+
+// Review Routes
+router.get("/reviews", (req, res) => review.getReviews(req, res))
+router.get("/recivedReview", (req, res) => review.getRecivedUserReview(req, res))
+router.get("/sendReview", (req, res) => review.getSendUserReview(req, res))
+router.get("/checkReviewByUserIdAndJobId", (req, res) => review.getReviewWithUserIdAndJobId(req, res))
+router.post("/review", (req, res) => review.addReview(req, res))
 
 // Form Routes
 router.get("/forms", (req, res) => form.getForms(req, res));

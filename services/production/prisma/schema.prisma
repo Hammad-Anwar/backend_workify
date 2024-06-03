@@ -38,6 +38,7 @@ model contract {
 }
 
 // contract_status : working, complete request, complete, cancel request, order cancel, 
+// Add another tabe for contract status
 
 model cancel_contract {
   id           Int           @id @default(autoincrement())

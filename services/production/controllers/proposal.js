@@ -168,6 +168,7 @@ module.exports = {
     try {
       const {
         useraccount_id,
+        jobUser_id,
         job_id,
         description,
         revisions,
@@ -293,8 +294,11 @@ module.exports = {
             body: "New proposal received.",
           },
         };
-
-        notify(message);
+        const detailData = {
+          user_id: Number(jobUser_id),
+          proposal_id: Number(responseData.proposal_id),
+        };
+        notify(message, detailData);
       } else {
         return res
           .status(401)
