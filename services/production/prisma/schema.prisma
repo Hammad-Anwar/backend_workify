@@ -45,6 +45,7 @@ model cancel_contract {
   contract_id  Int?
   user_id      Int?
   message      String?       @db.VarChar
+  image        String?       @db.VarChar
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
   contract     contract?     @relation(fields: [contract_id], references: [contract_id], onDelete: Cascade)
@@ -184,6 +185,7 @@ model dispute_complains {
   dispute_id     Int
   useraccount_id Int?
   complain_msg   String?       @db.VarChar
+  image          String?       @db.VarChar
   dispute        dispute?      @relation(fields: [dispute_id], references: [dispute_id], onDelete: Cascade)
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt

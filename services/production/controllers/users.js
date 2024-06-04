@@ -128,7 +128,6 @@ module.exports = {
           role: true,
         },
       });
-
       if (!userFound) {
         return res.status(404).send({
           status: 404,
@@ -172,9 +171,13 @@ module.exports = {
           message: "Client",
         });
       } else if (userFound.role.name == "admin") {
+        const user_account = {
+          useraccount_id: userFound.user_id,
+          user_account: userFound,
+        };
         return res.status(200).send({
           status: 200,
-          data: generateToken(userFound),
+          data: generateToken(user_account),
           message: "Admin",
         });
       }

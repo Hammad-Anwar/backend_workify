@@ -170,7 +170,7 @@ module.exports = {
   // POST Add dispute Complains by User both user's
   async addDisputeComplains(req, res) {
     try {
-      const { dispute_id, useraccount_id, complain_msg } = req.body;
+      const { dispute_id, useraccount_id, complain_msg, img } = req.body;
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
@@ -182,11 +182,13 @@ module.exports = {
           return res
             .status(400)
             .send({ message: "Please provide all fields " });
+        const imgUrl = await uploadImage(img);
         const data = await prisma.dispute_complains.create({
           data: {
             useraccount_id,
             dispute_id,
             complain_msg,
+            image: imgUrl
           },
         });
         res.status(200).json({

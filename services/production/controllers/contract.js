@@ -4,6 +4,7 @@ const generateToken = require("../utilities/generateToken");
 const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
+const { uploadImage } = require("../utilities/cloudinary");
 
 module.exports = {
   async getContracts(req, res) {
@@ -161,8 +162,7 @@ module.exports = {
 
               freelancer: {
                 freelancer_id: data.proposal?.job?.freelancer?.freelancer_id,
-                user_id:
-                  data.proposal?.job?.freelancer?.user_account?.user_id,
+                user_id: data.proposal?.job?.freelancer?.user_account?.user_id,
                 first_name:
                   data.proposal?.job?.freelancer?.user_account?.first_name,
                 last_name:
@@ -171,8 +171,7 @@ module.exports = {
               },
               client: {
                 client_id: data.proposal?.job?.client?.client_id,
-                user_id:
-                  data.proposal?.job?.client?.user_account?.user_id,
+                user_id: data.proposal?.job?.client?.user_account?.user_id,
                 first_name:
                   data.proposal?.job?.client?.user_account?.first_name,
                 last_name: data.proposal?.job?.client?.user_account?.last_name,
@@ -246,7 +245,7 @@ module.exports = {
   // POST Cancel Contract by user and update the status cancel request
   async addCancelContract(req, res) {
     try {
-      const { contract_id, user_id, message } = req.body;
+      const { contract_id, user_id, message, img } = req.body;
       let token = req.headers["authorization"];
       if (token) {
         token = await verifyToken(token.split(" ")[1]);
@@ -261,6 +260,7 @@ module.exports = {
             contract_id,
           },
         });
+        const imgUrl = await uploadImage(img);
         if (checkStatus.contract_status === "working") {
           await prisma.contract.update({
             where: {
@@ -270,11 +270,13 @@ module.exports = {
               contract_status: "cancel request",
             },
           });
+
           const data = await prisma.cancel_contract.create({
             data: {
               contract_id,
               user_id,
               message,
+              image: imgUrl,
             },
           });
           res.status(200).json({
@@ -288,6 +290,7 @@ module.exports = {
               contract_id,
               user_id,
               message,
+              image: imgUrl,
             },
           });
           res.status(200).json({
