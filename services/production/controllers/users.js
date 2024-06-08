@@ -38,6 +38,9 @@ module.exports = {
           where: {
             user_id: Number(id),
           },
+          include: {
+            form: true
+          }
         });
         res.status(200).json({
           status: 200,

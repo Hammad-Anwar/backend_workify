@@ -72,6 +72,7 @@ router.delete("/dispute", (req, res) => dispute.deleteDispute(req, res))
 router.get("/proposals", (req, res) => proposal.getProposals(req, res))
 router.post("/proposals", (req, res) => proposal.addProposal(req, res))
 router.get("/proposalsByUser", (req, res) => proposal.getProposalByUserId(req, res))
+router.get("/proposalsByJob", (req, res) => proposal.getProposalByJobId(req, res))
 router.get("/receivedProposals", (req, res) => proposal.getReceivedProposals(req, res))
 router.put("/proposal", (req, res) => proposal.updateProposalStatus(req, res))
 
@@ -81,7 +82,8 @@ router.get("/cancelContracts", (req, res) => contract.getCancelContracts(req, re
 router.get("/contract", (req, res) => contract.getContractById(req, res))
 router.get("/contractsByProposalIds", (req, res) => contract.getContractsByProposalIds(req, res))
 router.post("/cancelContractReq", (req, res) => contract.addCancelContract(req, res))
-router.put("/updateContractStatus", (req, res) => contract.updateContractStatus(req, res))
+router.put("/updateCancelContractStatus", (req, res) => contract.updateCancelContractStatus(req, res))
+router.put("/updateCompleteContractStatus", (req, res) => contract.updateCompleteContractStatus(req, res))
 
 // Review Routes
 router.get("/reviews", (req, res) => review.getReviews(req, res))

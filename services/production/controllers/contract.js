@@ -309,8 +309,8 @@ module.exports = {
     }
   },
 
-  // PUT Update Contract Status
-  async updateContractStatus(req, res) {
+  // PUT Update Cancel Contract Status
+  async updateCancelContractStatus(req, res) {
     try {
       const { id, status } = req.body;
       let token = req.headers["authorization"];
@@ -322,7 +322,7 @@ module.exports = {
         )
           return res.status(400).send({ data: "Please provide all fields " });
         try {
-          const dispute = await prisma.contract.update({
+          const contract = await prisma.contract.update({
             where: {
               contract_id: Number(id),
             },
@@ -330,10 +330,104 @@ module.exports = {
               contract_status: status,
             },
           });
+          if (contract?.contract_status === "order cancel") {
+            const tasks = await prisma.task.findMany({
+              where: {
+                has_proposal_task: {
+                  some: {
+                    proposal_id: parseInt(contract?.proposal_id),
+                  },
+                },
+              },
+              include: {
+                has_proposal_task: true,
+              },
+            });
+            const taskUpdates = tasks.map((task) => ({
+              where: {
+                task_id: task.task_id,
+              },
+              data: {
+                status: "none",
+              },
+            }));
+
+            await prisma.$transaction(
+              taskUpdates.map((update) => prisma.task.update(update))
+            );
+          }
           return res.status(200).json({
             status: 200,
             message: "Status Update Successfully",
-            data: dispute,
+            data: contract,
+          });
+        } catch (error) {
+          if (error.code === "P2025") {
+            return res.status(400).send({ data: " data does not exist!" });
+          }
+          throw error;
+        }
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+   // PUT Update Cancel Contract Status
+   async updateCompleteContractStatus(req, res) {
+    try {
+      const { id, status } = req.body;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (
+          validator.isEmpty(id.toString()) ||
+          validator.isEmpty(status.toString())
+        )
+          return res.status(400).send({ data: "Please provide all fields " });
+        try {
+          const contract = await prisma.contract.update({
+            where: {
+              contract_id: Number(id),
+            },
+            data: {
+              contract_status: status,
+            },
+          });
+          if (contract?.contract_status === "complete") {
+            const tasks = await prisma.task.findMany({
+              where: {
+                has_proposal_task: {
+                  some: {
+                    proposal_id: parseInt(contract?.proposal_id),
+                  },
+                },
+              },
+              include: {
+                has_proposal_task: true,
+              },
+            });
+            const taskUpdates = tasks.map((task) => ({
+              where: {
+                task_id: task.task_id,
+              },
+              data: {
+                status: "complete",
+              },
+            }));
+
+            await prisma.$transaction(
+              taskUpdates.map((update) => prisma.task.update(update))
+            );
+          }
+          return res.status(200).json({
+            status: 200,
+            message: "Status Update Successfully",
+            data: contract,
           });
         } catch (error) {
           if (error.code === "P2025") {

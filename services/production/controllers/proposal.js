@@ -118,6 +118,7 @@ module.exports = {
       return res.status(500).json({ status: 500, message: e.message });
     }
   },
+
   // GET Proposal data by user Id
   async getProposalByUserId(req, res) {
     try {
@@ -152,6 +153,57 @@ module.exports = {
         res.status(200).json({
           status: 200,
           data: data,
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  // Get Proposal data by job Id
+  async getProposalByJobId(req, res) {
+    try {
+      const { job_id } = req.query;
+      let token = req.headers["authorization"];
+      if (token) {
+        token = await verifyToken(token.split(" ")[1]);
+        if (validator.isEmpty(job_id.toString()))
+          return res
+            .status(400)
+            .send({ message: "Please provide all fields " });
+        const data = await prisma.job.findUnique({
+          where: {
+            job_id: Number(job_id),
+          },
+          include: {
+            proposal: {
+              include: {
+                has_proposal_task: true,
+              },
+            },
+          },
+        });
+
+        const countSendProposal = await prisma.proposal.count({
+          where: {
+            job_id: Number(job_id),
+          },
+        });
+        const countDeclineProposal = await prisma.proposal.count({
+          where: {
+            AND: {
+              job_id: Number(job_id),
+              proposal_status: "decline",
+            },
+          },
+        });
+        res.status(200).json({
+          status: 200,
+          data: { data, countSendProposal, countDeclineProposal },
         });
       } else {
         return res
