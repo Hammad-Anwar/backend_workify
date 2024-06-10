@@ -284,6 +284,7 @@ model user_account {
   role_id             Int
   status              String              @default("unverified")
   fcmToken            String              @default("")
+  stripId             String              @default("")
   role                role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
   client              client[]
   freelancer          freelancer[]

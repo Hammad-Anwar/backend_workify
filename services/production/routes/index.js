@@ -13,6 +13,7 @@ const response = require("../controllers/response");
 const question = require("../controllers/question");
 const admin = require("../controllers/admin");
 const review = require("../controllers/review");
+const stripe = require("../controllers/stripe");
 
 var router = express.Router();
 
@@ -120,9 +121,15 @@ router.delete("/response", (req, res) => response.deleteResponse(req, res));
 
 //Admin Routes 
 router.get("/usersByAdmin", (req, res) => admin.getAllUsers(req, res));
+router.get("/allCountData", (req, res) => admin.getAllCountData(req, res));
 router.get("/userByAdmin", (req, res) => admin.getSingleUserById(req, res));
 router.put("/updateUserStatus", (req, res) => admin.updateUserStatus(req, res));
 
+// Stripe Routes
+router.post("/payment-intent", (req, res) => stripe.paymentIntent(req, res));
+router.post("/payout", (req, res) => stripe.payout(req, res));
+router.post("/payment-sheet", (req, res) => stripe.paymentsheet(req, res));
+router.get("/updateStripeUser", (req, res) => stripe.updateStripeUser(req, res));
 
 
 

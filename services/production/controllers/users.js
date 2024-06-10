@@ -5,6 +5,9 @@ const verifyToken = require("../utilities/verifyToken");
 const validator = require("validator");
 const crypto = require("crypto");
 const { uploadImage } = require("../utilities/cloudinary");
+const stripe = require("stripe")(
+  "sk_test_51PPmQqK9F79Hh53UfKqL3Pwcz6fFJ8Lcr6OQN8fQSmAVaUZvlE4ur1WiSIEDtXuCekY0006qTL2N2aIHkbyLOSBp00BrCb9gQl"
+);
 
 module.exports = {
   // GET User account table data
@@ -39,8 +42,8 @@ module.exports = {
             user_id: Number(id),
           },
           include: {
-            form: true
-          }
+            form: true,
+          },
         });
         res.status(200).json({
           status: 200,
@@ -270,6 +273,7 @@ module.exports = {
         last_name,
         gender,
         role_id,
+        fcmToken
       } = req.body;
       if (
         validator.isEmpty(user_name) ||
@@ -299,8 +303,25 @@ module.exports = {
           .send({ message: "User with this email already exists" });
       }
 
+      const account = await stripe.accounts.create({
+        country: "DE",
+        email: email,
+        controller: {
+          fees: {
+            payer: "application",
+          },
+          losses: {
+            payments: "application",
+          },
+          stripe_dashboard: {
+            type: "express",
+          },
+        },
+      });
+
       const user = await prisma.user_account.create({
         data: {
+          stripId: account.id,
           user_name,
           email,
           password: crypto
@@ -311,6 +332,7 @@ module.exports = {
           last_name,
           gender,
           role_id,
+          fcmToken,
         },
         include: {
           role: true,
@@ -319,7 +341,7 @@ module.exports = {
       res.status(200).json({
         status: 200,
         message: "Data add successfully",
-        data: generateToken(user),
+        data: user,
       });
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
@@ -337,7 +359,7 @@ module.exports = {
         if (validator.isEmpty(image) || validator.isEmpty(user_id.toString())) {
           return res.status(400).send({ message: "Please provide all fields" });
         }
-
+        const imgUrl = await uploadImage(image);
         const existsUser = await prisma.user_account.findUnique({
           where: { user_id: user_id },
           include: {
@@ -378,14 +400,14 @@ module.exports = {
             await prisma.user_account.update({
               where: { user_id: existsUser.user_id },
               data: {
-                image,
+                image: imgUrl,
               },
             });
 
             res.status(200).json({
               status: 200,
               message: "Data added successfully in freelancer user",
-              data: freelancerData,
+              data: generateToken(freelancerData),
             });
           } else if (existsUser.role.name === "client") {
             const { overview, location } = userData;
@@ -408,14 +430,14 @@ module.exports = {
             await prisma.user_account.update({
               where: { user_id: existsUser.user_id },
               data: {
-                image, // assuming 'image' is the Base64-encoded image string
+                image: imgUrl,
               },
             });
 
             res.status(200).json({
               status: 200,
               message: "Data added successfully in client user",
-              data: clientData,
+              data: generateToken(clientData),
             });
           }
         } else {

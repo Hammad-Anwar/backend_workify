@@ -16,8 +16,8 @@ module.exports = {
             role: true,
           },
           orderBy: {
-            user_id: 'asc'
-          }
+            user_id: "asc",
+          },
         });
         res.status(200).json({
           data: user_accounts,
@@ -66,8 +66,8 @@ module.exports = {
     }
   },
 
-   // PUT Update User Status for verification
-   async updateUserStatus(req, res) {
+  // PUT Update User Status for verification
+  async updateUserStatus(req, res) {
     try {
       const { id, status } = req.body;
       let token = req.headers["authorization"];
@@ -102,6 +102,49 @@ module.exports = {
         return res
           .status(401)
           .send({ status: 401, data: "Please provide valid auth token" });
+      }
+    } catch (e) {
+      return res.status(500).json({ status: 500, message: e.message });
+    }
+  },
+
+  async getAllCountData(req, res) {
+    try {
+      let token = req.headers["authorization"];
+      if (token) {
+        const countUser = await prisma.user_account.count({});
+        const countClient = await prisma.client.count({});
+        const countFreelancer = await prisma.freelancer.count({});
+        const countJob = await prisma.job.count({});
+        const countFeatureJob = await prisma.feature_job.count({where: {status: true}});
+        const countActiveDispute = await prisma.dispute.count({where: {status: 'active'}});
+        const countCompleteContract = await prisma.contract.count({
+          where: { contract_status: "complete" },
+        });
+        const countCancelContract = await prisma.contract.count({
+          where: { contract_status: "order cancel" },
+        });
+        const countWorkingContract = await prisma.contract.count({
+          where: { contract_status: "working" },
+        });
+
+        res.status(200).json({
+          data: {
+            countUser,
+            countClient,
+            countFreelancer,
+            countJob,
+            countFeatureJob,
+            countActiveDispute,
+            countCompleteContract,
+            countCancelContract,
+            countWorkingContract,
+          },
+        });
+      } else {
+        return res
+          .status(401)
+          .send({ status: 401, data: "Please provide a valid auth token" });
       }
     } catch (e) {
       return res.status(500).json({ status: 500, message: e.message });
