@@ -1,9 +1,9 @@
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
-  cloud_name: "dskffiksr",
-  api_key: "424982255271138",
-  api_secret: "P4Z5k3-0QouAnyVou8EA74g33Es",
+  cloud_name: "######",
+  api_key: "#########",
+  api_secret: "###########",
 });
 async function uploadImage(base64Data, folderName) {
   try {
